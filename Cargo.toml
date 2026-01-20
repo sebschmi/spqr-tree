@@ -1,6 +1,11 @@
 [package]
 name = "spqr-tree"
+description = "A representation of the SPQR tree in Rust with support for I/O"
 version = "0.1.0"
+authors = ["Sebastian Schmidt <sebastian.schmidt@helsinki.fi>"]
+license = "BSD-2-Clause"
+repository = "https://github.com/sebschmi/spqr-tree"
+
 edition = "2024"
 
 [dependencies]
