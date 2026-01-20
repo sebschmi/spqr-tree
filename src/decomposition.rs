@@ -3,7 +3,7 @@ use tagged_vec::TaggedVec;
 
 use crate::decomposition::{
     graph::StaticGraph,
-    indices::{BlockIndex, ComponentIndex, SPQRNodeIndex},
+    indices::{BlockIndex, ComponentIndex, SPQREdgeIndex, SPQRNodeIndex},
 };
 
 pub mod builder;
@@ -22,7 +22,8 @@ pub struct SPQRDecomposition<'graph, Graph: StaticGraph> {
     graph: &'graph Graph,
     components: TaggedVec<ComponentIndex<Graph>, Component<Graph>>,
     blocks: TaggedVec<BlockIndex<Graph>, Block<Graph>>,
-    triconnected_components: TaggedVec<SPQRNodeIndex<Graph>, SPQRNode<Graph>>,
+    spqr_nodes: TaggedVec<SPQRNodeIndex<Graph>, SPQRNode<Graph>>,
+    spqr_edges: TaggedVec<SPQREdgeIndex<Graph>, SPQREdge<Graph>>,
     node_data: Vec<SPQRDecompositionNodeData<Graph>>,
     edge_data: Vec<SPQRDecompositionEdgeData<Graph>>,
 }
@@ -30,17 +31,20 @@ pub struct SPQRDecomposition<'graph, Graph: StaticGraph> {
 pub struct Component<Graph: StaticGraph> {
     nodes: Vec<Graph::NodeIndex>,
     blocks: Vec<BlockIndex<Graph>>,
+    cut_nodes: Vec<Graph::NodeIndex>,
 }
 
 pub struct Block<Graph: StaticGraph> {
     component: ComponentIndex<Graph>,
     nodes: Vec<Graph::NodeIndex>,
-    triconnected_components: Vec<SPQRNodeIndex<Graph>>,
+    spqr_nodes: Vec<SPQRNodeIndex<Graph>>,
+    spqr_edges: Vec<SPQREdgeIndex<Graph>>,
 }
 
 pub struct SPQRNode<Graph: StaticGraph> {
     block: BlockIndex<Graph>,
     nodes: Vec<Graph::NodeIndex>,
+    edges: Vec<Graph::EdgeIndex>,
     spqr_node_type: SPQRNodeType,
 }
 
@@ -50,16 +54,22 @@ pub enum SPQRNodeType {
     RNode,
 }
 
+/// An edge in the SPQR tree connecting two SPQR nodes.
+pub struct SPQREdge<Graph: StaticGraph> {
+    endpoints: (SPQRNodeIndex<Graph>, SPQRNodeIndex<Graph>),
+    virtual_edge: (Graph::NodeIndex, Graph::NodeIndex),
+}
+
 pub struct SPQRDecompositionNodeData<Graph: StaticGraph> {
     component_index: ComponentIndex<Graph>,
     block_indices: SmallVec<[BlockIndex<Graph>; 1]>,
-    triconnected_component_indices: SmallVec<[SPQRNodeIndex<Graph>; 1]>,
+    spqr_node_indices: SmallVec<[SPQRNodeIndex<Graph>; 1]>,
 }
 
 pub struct SPQRDecompositionEdgeData<Graph: StaticGraph> {
     component_index: ComponentIndex<Graph>,
     block_index: BlockIndex<Graph>,
-    triconnected_component_index: SPQRNodeIndex<Graph>,
+    spqr_node_index: SPQRNodeIndex<Graph>,
 }
 
 impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {}

@@ -34,6 +34,6 @@ dependencies = [
 
 [[package]]
 name = "tagged-vec"
-version = "0.3.5"
+version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fb7bd02ad12c637c3770aa844ea9e3529ee7b23c1f8138e9df7782beab289ee"
+checksum = "b7aaeb1a61db84ad2bfac1da3920289b4cddcb93957313993a3bc1c764925e96"
