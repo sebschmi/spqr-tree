@@ -3,7 +3,10 @@ use tagged_vec::TaggedVec;
 
 use crate::decomposition::{
     graph::StaticGraph,
-    indices::{BlockIndex, ComponentIndex, SPQREdgeIndex, SPQRNodeIndex},
+    indices::{
+        BlockIndex, ComponentIndex, CutNodeIndex, OptionalCutNodeIndex, SPQREdgeIndex,
+        SPQRNodeIndex,
+    },
 };
 
 pub mod builder;
@@ -22,16 +25,17 @@ pub struct SPQRDecomposition<'graph, Graph: StaticGraph> {
     graph: &'graph Graph,
     components: TaggedVec<ComponentIndex<Graph>, Component<Graph>>,
     blocks: TaggedVec<BlockIndex<Graph>, Block<Graph>>,
+    cut_nodes: TaggedVec<CutNodeIndex<Graph>, CutNode<Graph>>,
     spqr_nodes: TaggedVec<SPQRNodeIndex<Graph>, SPQRNode<Graph>>,
     spqr_edges: TaggedVec<SPQREdgeIndex<Graph>, SPQREdge<Graph>>,
-    node_data: Vec<SPQRDecompositionNodeData<Graph>>,
-    edge_data: Vec<SPQRDecompositionEdgeData<Graph>>,
+    node_data: TaggedVec<Graph::NodeIndex, SPQRDecompositionNodeData<Graph>>,
+    edge_data: TaggedVec<Graph::EdgeIndex, SPQRDecompositionEdgeData<Graph>>,
 }
 
 pub struct Component<Graph: StaticGraph> {
     nodes: Vec<Graph::NodeIndex>,
     blocks: Vec<BlockIndex<Graph>>,
-    cut_nodes: Vec<Graph::NodeIndex>,
+    cut_nodes: Vec<CutNodeIndex<Graph>>,
 }
 
 pub struct Block<Graph: StaticGraph> {
@@ -39,6 +43,12 @@ pub struct Block<Graph: StaticGraph> {
     nodes: Vec<Graph::NodeIndex>,
     spqr_nodes: Vec<SPQRNodeIndex<Graph>>,
     spqr_edges: Vec<SPQREdgeIndex<Graph>>,
+}
+
+pub struct CutNode<Graph: StaticGraph> {
+    component: ComponentIndex<Graph>,
+    node: Graph::NodeIndex,
+    adjacent_blocks: SmallVec<[BlockIndex<Graph>; 2]>,
 }
 
 pub struct SPQRNode<Graph: StaticGraph> {
@@ -63,7 +73,9 @@ pub struct SPQREdge<Graph: StaticGraph> {
 pub struct SPQRDecompositionNodeData<Graph: StaticGraph> {
     component_index: ComponentIndex<Graph>,
     block_indices: SmallVec<[BlockIndex<Graph>; 1]>,
+    cut_node_index: OptionalCutNodeIndex<Graph>,
     spqr_node_indices: SmallVec<[SPQRNodeIndex<Graph>; 1]>,
+    extra_data: String,
 }
 
 pub struct SPQRDecompositionEdgeData<Graph: StaticGraph> {
@@ -72,4 +84,45 @@ pub struct SPQRDecompositionEdgeData<Graph: StaticGraph> {
     spqr_node_index: SPQRNodeIndex<Graph>,
 }
 
-impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {}
+impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
+    pub fn iter_component_indices(&self) -> impl Iterator<Item = ComponentIndex<Graph>> {
+        self.components.iter_indices()
+    }
+
+    pub fn iter_components(
+        &self,
+    ) -> impl Iterator<Item = (ComponentIndex<Graph>, &Component<Graph>)> {
+        self.components.iter()
+    }
+
+    pub fn iter_blocks_in_component(
+        &self,
+        component_index: ComponentIndex<Graph>,
+    ) -> impl Iterator<Item = (BlockIndex<Graph>, &Block<Graph>)> {
+        self.components[component_index]
+            .blocks
+            .iter()
+            .copied()
+            .map(move |block_index| (block_index, &self.blocks[block_index]))
+    }
+
+    pub fn iter_nodes(&self) -> impl Iterator<Item = Graph::NodeIndex> {
+        self.graph.node_indices()
+    }
+
+    pub fn node_extra_data(&self, node_index: Graph::NodeIndex) -> &str {
+        &self.node_data[node_index].extra_data
+    }
+}
+
+impl<Graph: StaticGraph> Component<Graph> {
+    pub fn iter_nodes(&self) -> impl Iterator<Item = Graph::NodeIndex> {
+        self.nodes.iter().copied()
+    }
+}
+
+impl<Graph: StaticGraph> Block<Graph> {
+    pub fn iter_nodes(&self) -> impl Iterator<Item = Graph::NodeIndex> {
+        self.nodes.iter().copied()
+    }
+}

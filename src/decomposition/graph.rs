@@ -4,6 +4,7 @@ use num_traits::bounds::UpperBounded;
 pub trait StaticGraph {
     type NodeIndex: Copy
         + std::fmt::Debug
+        + std::fmt::Display
         + Eq
         + std::hash::Hash
         + Ord
@@ -13,6 +14,7 @@ pub trait StaticGraph {
 
     type EdgeIndex: Copy
         + std::fmt::Debug
+        + std::fmt::Display
         + Eq
         + std::hash::Hash
         + Ord
