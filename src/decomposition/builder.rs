@@ -8,7 +8,10 @@ use crate::decomposition::{
     Block, Component, CutNode, SPQRDecomposition, SPQRDecompositionEdgeData,
     SPQRDecompositionNodeData, SPQREdge, SPQRNode, SPQRNodeType,
     graph::StaticGraph,
-    indices::{BlockIndex, ComponentIndex, CutNodeIndex, OptionalCutNodeIndex, SPQREdgeIndex, SPQRNodeIndex},
+    indices::{
+        BlockIndex, ComponentIndex, CutNodeIndex, OptionalCutNodeIndex, SPQREdgeIndex,
+        SPQRNodeIndex,
+    },
 };
 
 pub struct SPQRDecompositionBuilder<'graph, Graph: StaticGraph> {
@@ -44,6 +47,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
                 component_index: ComponentIndex::max_value(),
                 block_index: BlockIndex::max_value(),
                 spqr_node_index: SPQRNodeIndex::max_value(),
+                extra_data: String::new(),
             })
             .take(graph.edge_count())
             .collect(),
@@ -239,6 +243,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
                 component_index,
                 block_index,
                 spqr_node_index,
+                ..
             } = &self.edge_data[edge_index];
 
             debug_assert_ne!(*component_index, ComponentIndex::max_value());
