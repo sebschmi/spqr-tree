@@ -168,6 +168,10 @@ macro_rules! impl_optional_index_traits {
             pub fn is_none(&self) -> bool {
                 self.0 == Graph::NodeIndex::max_value()
             }
+
+            pub fn is_some(&self) -> bool {
+                self.0 != Graph::NodeIndex::max_value()
+            }
         }
     };
 }

@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use num_traits::bounds::UpperBounded;
 
-/// An undirected graph.
+/// An undirected graph without multiedges or self-loops.
 pub trait StaticGraph {
     type NodeIndex: Copy
         + std::fmt::Debug
@@ -37,20 +37,23 @@ pub trait StaticGraph {
     fn edge_count(&self) -> usize;
 
     /// Returns the index of the node with the given name.
-    fn node_index_from_name(&self, name: &str) -> Self::NodeIndex;
+    fn node_index_from_name(&self, name: &str) -> Option<Self::NodeIndex>;
 
     /// Returns the index of the edge with the given name.
-    fn edge_index_from_name(&self, name: &str) -> Self::EdgeIndex;
+    fn edge_index_from_name(&self, name: &str) -> Option<Self::EdgeIndex>;
 
     /// Returns the name of the given node.
-    fn node_name(&self, node_index: Self::NodeIndex) -> Cow<String>;
+    fn node_name(&self, node_index: Self::NodeIndex) -> Cow<'_, String>;
 
     /// Returns the name of the given edge.
-    fn edge_name(&self, edge_index: Self::EdgeIndex) -> Cow<String>;
+    fn edge_name(&self, edge_index: Self::EdgeIndex) -> Cow<'_, String>;
 
     /// Returns an iterator over the incident edges of the given node.
     fn incident_edges(&self, node: Self::NodeIndex) -> impl Iterator<Item = Self::EdgeIndex>;
 
     /// Returns the endpoints of the given edge as a tuple of node indices.
     fn edge_endpoints(&self, edge: Self::EdgeIndex) -> (Self::NodeIndex, Self::NodeIndex);
+
+    /// Returns the unique edge between the two given nodes, if it exists.
+    fn edge_between(&self, u: Self::NodeIndex, v: Self::NodeIndex) -> Option<Self::EdgeIndex>;
 }

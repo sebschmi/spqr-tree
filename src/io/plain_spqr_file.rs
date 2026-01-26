@@ -2,7 +2,7 @@
 
 use std::{
     collections::HashMap,
-    io::{BufRead, BufReader, Read, Write},
+    io::{BufReader, Read, Write},
 };
 
 use crate::{
@@ -35,38 +35,205 @@ pub fn read<'graph, Graph: StaticGraph>(
 
     let mut builder = SPQRDecompositionBuilder::new(graph);
     let mut name_to_component_index = HashMap::new();
-    //let mut name_to_block_index = HashMap::new();
-    //let mut name_to_spqr_node_index = HashMap::new();
-    //let mut name_to_spqr_edge_index = HashMap::new();
+    let mut name_to_block_index = HashMap::new();
+    let mut name_to_spqr_node_index = HashMap::new();
+    let mut name_to_spqr_edge_index = HashMap::new();
 
     while let Some(line) = read_next_line(&mut reader)? {
         match line[0].as_str() {
             "G" => {
-                let component_name = line.get(1).ok_or_else(|| {
-                    ReadError::Io(std::io::Error::new(
-                        std::io::ErrorKind::InvalidData,
-                        "missing component name",
-                    ))
-                })?;
+                let component_name = line
+                    .get(1)
+                    .ok_or_else(|| ReadError::MissingComponentNameInGLine)?;
                 let nodes = line
                     .iter()
                     .skip(2)
-                    .map(|node| graph.node_index_from_name(node))
-                    .collect();
+                    .map(|node| {
+                        graph
+                            .node_index_from_name(node)
+                            .ok_or_else(|| ReadError::UnknownNodeName(node.clone()))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+
+                if nodes.is_empty() {
+                    return Err(ReadError::EmptyComponent);
+                }
 
                 let component_index = builder.add_component(nodes);
                 name_to_component_index.insert(component_name.clone(), component_index);
             }
             "N" => {
-                let node_name = line.get(1).ok_or_else(|| {
-                    ReadError::Io(std::io::Error::new(
-                        std::io::ErrorKind::InvalidData,
-                        "missing node name",
-                    ))
-                })?;
+                let node_name = line
+                    .get(1)
+                    .ok_or_else(|| ReadError::MissingNodeNameInNLine)?;
                 let extra_data = line[2..].join(" ");
-                let node_index = graph.node_index_from_name(node_name);
+                let node_index = graph
+                    .node_index_from_name(node_name)
+                    .ok_or_else(|| ReadError::UnknownNodeName(node_name.clone()))?;
                 builder.add_extra_data_to_node(node_index, extra_data);
+            }
+            "B" => {
+                let block_name = line
+                    .get(1)
+                    .ok_or_else(|| ReadError::MissingBlockNameInBLine)?;
+                let component_name = line
+                    .get(2)
+                    .ok_or_else(|| ReadError::MissingComponentNameInBLine)?;
+                let component_index = *name_to_component_index
+                    .get(component_name)
+                    .ok_or_else(|| ReadError::UnknownComponentName(component_name.clone()))?;
+                let nodes = line
+                    .iter()
+                    .skip(3)
+                    .map(|node| {
+                        graph
+                            .node_index_from_name(node)
+                            .ok_or_else(|| ReadError::UnknownNodeName(node.clone()))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+
+                if nodes.is_empty() {
+                    return Err(ReadError::EmptyBlock);
+                }
+
+                let block_index = builder.add_block(component_index, nodes);
+                name_to_block_index.insert(block_name.clone(), block_index);
+            }
+            "C" => {
+                let cut_node_name = line
+                    .get(1)
+                    .ok_or_else(|| ReadError::MissingNodeNameInCLine)?;
+                let cut_node_index = graph
+                    .node_index_from_name(cut_node_name)
+                    .ok_or_else(|| ReadError::UnknownNodeName(cut_node_name.clone()))?;
+                let block_indices = line
+                    .iter()
+                    .skip(2)
+                    .map(|block_name| {
+                        name_to_block_index
+                            .get(block_name)
+                            .cloned()
+                            .ok_or_else(|| ReadError::UnknownBlockName(block_name.clone()))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+
+                if block_indices.is_empty() {
+                    return Err(ReadError::EmptyCutNode);
+                }
+
+                builder.add_cut_node(cut_node_index, block_indices);
+            }
+            "S" | "P" | "R" => {
+                let spqr_node_type = match line[0].as_str() {
+                    "S" => SPQRNodeType::SNode,
+                    "P" => SPQRNodeType::PNode,
+                    "R" => SPQRNodeType::RNode,
+                    _ => unreachable!(),
+                };
+                let spqr_node_name = line
+                    .get(1)
+                    .ok_or_else(|| ReadError::MissingSPQRNodeNameInSPRLine)?;
+                let block_name = line
+                    .get(2)
+                    .ok_or_else(|| ReadError::MissingBlockNameInSPRLine)?;
+                let block_index = *name_to_block_index
+                    .get(block_name)
+                    .ok_or_else(|| ReadError::UnknownBlockName(block_name.clone()))?;
+                let nodes = line
+                    .iter()
+                    .skip(3)
+                    .map(|node| {
+                        graph
+                            .node_index_from_name(node)
+                            .ok_or_else(|| ReadError::UnknownNodeName(node.clone()))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+
+                if nodes.len() < 2 {
+                    return Err(ReadError::LessThanTwoNodesInSPQRNode);
+                }
+
+                let spqr_node_index = builder.add_spqr_node(block_index, nodes, spqr_node_type);
+                name_to_spqr_node_index.insert(spqr_node_name.clone(), spqr_node_index);
+            }
+            "V" => {
+                let spqr_edge_name = line
+                    .get(1)
+                    .ok_or_else(|| ReadError::MissingSPQREdgeNameInVLine)?;
+                let spqr_node_name_u = line
+                    .get(2)
+                    .ok_or_else(|| ReadError::MissingSPQRNodeNameInVLine)?;
+                let spqr_node_name_v = line
+                    .get(3)
+                    .ok_or_else(|| ReadError::MissingSPQRNodeNameInVLine)?;
+                let node_name_u = line
+                    .get(4)
+                    .ok_or_else(|| ReadError::MissingNodeNameInVLine)?;
+                let node_name_v = line
+                    .get(5)
+                    .ok_or_else(|| ReadError::MissingNodeNameInVLine)?;
+
+                let spqr_node_index_u = *name_to_spqr_node_index
+                    .get(spqr_node_name_u)
+                    .ok_or_else(|| ReadError::UnknownSPQRNodeName(spqr_node_name_u.clone()))?;
+                let spqr_node_index_v = *name_to_spqr_node_index
+                    .get(spqr_node_name_v)
+                    .ok_or_else(|| ReadError::UnknownSPQRNodeName(spqr_node_name_v.clone()))?;
+                let node_index_u = graph
+                    .node_index_from_name(node_name_u)
+                    .ok_or_else(|| ReadError::UnknownNodeName(node_name_u.clone()))?;
+                let node_index_v = graph
+                    .node_index_from_name(node_name_v)
+                    .ok_or_else(|| ReadError::UnknownNodeName(node_name_v.clone()))?;
+
+                let block_index = builder.spqr_node_block_index(spqr_node_index_u);
+                if block_index != builder.spqr_node_block_index(spqr_node_index_v) {
+                    return Err(ReadError::SPQREdgeBetweenDifferentBlocks(
+                        spqr_edge_name.clone(),
+                    ));
+                }
+
+                let spqr_edge_index = builder.add_spqr_edge(
+                    Some(block_index),
+                    (spqr_node_index_u, spqr_node_index_v),
+                    (node_index_u, node_index_v),
+                );
+                name_to_spqr_edge_index.insert(spqr_edge_name.clone(), spqr_edge_index);
+            }
+            "E" => {
+                let edge_name = line
+                    .get(1)
+                    .ok_or_else(|| ReadError::MissingEdgeNameInELine)?;
+                let spqr_node_name = line
+                    .get(2)
+                    .ok_or_else(|| ReadError::MissingSPQRNodeNameInELine)?;
+                let block_name = line
+                    .get(3)
+                    .ok_or_else(|| ReadError::MissingBlockNameInELine)?;
+                let node_name_u = line
+                    .get(4)
+                    .ok_or_else(|| ReadError::MissingNodeNameInELine)?;
+                let node_name_v = line
+                    .get(5)
+                    .ok_or_else(|| ReadError::MissingNodeNameInELine)?;
+
+                let node_index_u = graph
+                    .node_index_from_name(node_name_u)
+                    .ok_or_else(|| ReadError::UnknownNodeName(node_name_u.clone()))?;
+                let node_index_v = graph
+                    .node_index_from_name(node_name_v)
+                    .ok_or_else(|| ReadError::UnknownNodeName(node_name_v.clone()))?;
+                let edge_index = graph
+                    .edge_between(node_index_u, node_index_v)
+                    .ok_or_else(|| ReadError::EdgeDoesNotExist(edge_name.clone()))?;
+                let spqr_node_index = *name_to_spqr_node_index
+                    .get(spqr_node_name)
+                    .ok_or_else(|| ReadError::UnknownSPQRNodeName(spqr_node_name.clone()))?;
+                let _block_index = *name_to_block_index
+                    .get(block_name)
+                    .ok_or_else(|| ReadError::UnknownBlockName(block_name.clone()))?;
+
+                builder.add_edge_to_spqr_node(edge_index, spqr_node_index);
             }
             other => {
                 return Err(ReadError::InvalidLineType(other.to_string()));
