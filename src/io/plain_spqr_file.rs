@@ -6,14 +6,15 @@ use std::{
 };
 
 use crate::{
-    decomposition::{
-        SPQRDecomposition, SPQRNodeType, builder::SPQRDecompositionBuilder, graph::StaticGraph,
-    },
+    decomposition::{SPQRDecomposition, SPQRNodeType, builder::SPQRDecompositionBuilder},
+    graph::StaticGraph,
     io::plain_spqr_file::{error::ReadError, read_utils::read_next_line},
 };
 
 pub mod error;
 mod read_utils;
+#[cfg(test)]
+pub mod tests;
 
 pub fn read<'graph, Graph: StaticGraph>(
     graph: &'graph Graph,
@@ -22,7 +23,7 @@ pub fn read<'graph, Graph: StaticGraph>(
     let mut reader = BufReader::new(reader);
 
     // Parse header.
-    let header = read_next_line(&mut reader)?.ok_or_else(|| ReadError::MissingHeader)?;
+    let header = read_next_line(&mut reader)?.ok_or(ReadError::MissingHeader)?;
     if header[0].as_str() != "H" {
         return Err(ReadError::MissingHeader);
     }
@@ -42,9 +43,7 @@ pub fn read<'graph, Graph: StaticGraph>(
     while let Some(line) = read_next_line(&mut reader)? {
         match line[0].as_str() {
             "G" => {
-                let component_name = line
-                    .get(1)
-                    .ok_or_else(|| ReadError::MissingComponentNameInGLine)?;
+                let component_name = line.get(1).ok_or(ReadError::MissingComponentNameInGLine)?;
                 let nodes = line
                     .iter()
                     .skip(2)
@@ -63,9 +62,7 @@ pub fn read<'graph, Graph: StaticGraph>(
                 name_to_component_index.insert(component_name.clone(), component_index);
             }
             "N" => {
-                let node_name = line
-                    .get(1)
-                    .ok_or_else(|| ReadError::MissingNodeNameInNLine)?;
+                let node_name = line.get(1).ok_or(ReadError::MissingNodeNameInNLine)?;
                 let extra_data = line[2..].join(" ");
                 let node_index = graph
                     .node_index_from_name(node_name)
@@ -73,12 +70,8 @@ pub fn read<'graph, Graph: StaticGraph>(
                 builder.add_extra_data_to_node(node_index, extra_data);
             }
             "B" => {
-                let block_name = line
-                    .get(1)
-                    .ok_or_else(|| ReadError::MissingBlockNameInBLine)?;
-                let component_name = line
-                    .get(2)
-                    .ok_or_else(|| ReadError::MissingComponentNameInBLine)?;
+                let block_name = line.get(1).ok_or(ReadError::MissingBlockNameInBLine)?;
+                let component_name = line.get(2).ok_or(ReadError::MissingComponentNameInBLine)?;
                 let component_index = *name_to_component_index
                     .get(component_name)
                     .ok_or_else(|| ReadError::UnknownComponentName(component_name.clone()))?;
@@ -100,9 +93,7 @@ pub fn read<'graph, Graph: StaticGraph>(
                 name_to_block_index.insert(block_name.clone(), block_index);
             }
             "C" => {
-                let cut_node_name = line
-                    .get(1)
-                    .ok_or_else(|| ReadError::MissingNodeNameInCLine)?;
+                let cut_node_name = line.get(1).ok_or(ReadError::MissingNodeNameInCLine)?;
                 let cut_node_index = graph
                     .node_index_from_name(cut_node_name)
                     .ok_or_else(|| ReadError::UnknownNodeName(cut_node_name.clone()))?;
@@ -130,12 +121,8 @@ pub fn read<'graph, Graph: StaticGraph>(
                     "R" => SPQRNodeType::RNode,
                     _ => unreachable!(),
                 };
-                let spqr_node_name = line
-                    .get(1)
-                    .ok_or_else(|| ReadError::MissingSPQRNodeNameInSPRLine)?;
-                let block_name = line
-                    .get(2)
-                    .ok_or_else(|| ReadError::MissingBlockNameInSPRLine)?;
+                let spqr_node_name = line.get(1).ok_or(ReadError::MissingSPQRNodeNameInSPRLine)?;
+                let block_name = line.get(2).ok_or(ReadError::MissingBlockNameInSPRLine)?;
                 let block_index = *name_to_block_index
                     .get(block_name)
                     .ok_or_else(|| ReadError::UnknownBlockName(block_name.clone()))?;
@@ -157,22 +144,11 @@ pub fn read<'graph, Graph: StaticGraph>(
                 name_to_spqr_node_index.insert(spqr_node_name.clone(), spqr_node_index);
             }
             "V" => {
-                let spqr_edge_name = line
-                    .get(1)
-                    .ok_or_else(|| ReadError::MissingSPQREdgeNameInVLine)?;
-                let spqr_node_name_u = line
-                    .get(2)
-                    .ok_or_else(|| ReadError::MissingSPQRNodeNameInVLine)?;
-                let spqr_node_name_v = line
-                    .get(3)
-                    .ok_or_else(|| ReadError::MissingSPQRNodeNameInVLine)?;
-                let node_name_u = line
-                    .get(4)
-                    .ok_or_else(|| ReadError::MissingNodeNameInVLine)?;
-                let node_name_v = line
-                    .get(5)
-                    .ok_or_else(|| ReadError::MissingNodeNameInVLine)?;
-
+                let spqr_edge_name = line.get(1).ok_or(ReadError::MissingSPQREdgeNameInVLine)?;
+                let spqr_node_name_u = line.get(2).ok_or(ReadError::MissingSPQRNodeNameInVLine)?;
+                let spqr_node_name_v = line.get(3).ok_or(ReadError::MissingSPQRNodeNameInVLine)?;
+                let node_name_u = line.get(4).ok_or(ReadError::MissingNodeNameInVLine)?;
+                let node_name_v = line.get(5).ok_or(ReadError::MissingNodeNameInVLine)?;
                 let spqr_node_index_u = *name_to_spqr_node_index
                     .get(spqr_node_name_u)
                     .ok_or_else(|| ReadError::UnknownSPQRNodeName(spqr_node_name_u.clone()))?;
@@ -201,21 +177,11 @@ pub fn read<'graph, Graph: StaticGraph>(
                 name_to_spqr_edge_index.insert(spqr_edge_name.clone(), spqr_edge_index);
             }
             "E" => {
-                let edge_name = line
-                    .get(1)
-                    .ok_or_else(|| ReadError::MissingEdgeNameInELine)?;
-                let spqr_node_name = line
-                    .get(2)
-                    .ok_or_else(|| ReadError::MissingSPQRNodeNameInELine)?;
-                let block_name = line
-                    .get(3)
-                    .ok_or_else(|| ReadError::MissingBlockNameInELine)?;
-                let node_name_u = line
-                    .get(4)
-                    .ok_or_else(|| ReadError::MissingNodeNameInELine)?;
-                let node_name_v = line
-                    .get(5)
-                    .ok_or_else(|| ReadError::MissingNodeNameInELine)?;
+                let edge_name = line.get(1).ok_or(ReadError::MissingEdgeNameInELine)?;
+                let spqr_node_name = line.get(2).ok_or(ReadError::MissingSPQRNodeNameInELine)?;
+                let block_name = line.get(3).ok_or(ReadError::MissingBlockNameInELine)?;
+                let node_name_u = line.get(4).ok_or(ReadError::MissingNodeNameInELine)?;
+                let node_name_v = line.get(5).ok_or(ReadError::MissingNodeNameInELine)?;
 
                 let node_index_u = graph
                     .node_index_from_name(node_name_u)

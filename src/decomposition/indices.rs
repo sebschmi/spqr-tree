@@ -1,6 +1,6 @@
 use num_traits::bounds::UpperBounded;
 
-use crate::decomposition::graph::StaticGraph;
+use crate::graph::StaticGraph;
 
 pub struct ComponentIndex<Graph: StaticGraph>(Graph::NodeIndex);
 

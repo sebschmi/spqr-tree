@@ -1,16 +1,15 @@
 use smallvec::SmallVec;
 use tagged_vec::TaggedVec;
 
-use crate::decomposition::{
-    graph::StaticGraph,
-    indices::{
+use crate::{
+    decomposition::indices::{
         BlockIndex, ComponentIndex, CutNodeIndex, OptionalCutNodeIndex, SPQREdgeIndex,
         SPQRNodeIndex,
     },
+    graph::StaticGraph,
 };
 
 pub mod builder;
-pub mod graph;
 pub mod indices;
 
 /// Represents the SPQR decomposition as an augmentation over a graph.

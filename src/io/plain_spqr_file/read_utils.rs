@@ -13,9 +13,7 @@ pub fn read_next_line(reader: &mut impl BufRead) -> Result<Option<Vec<String>>, 
         let line = line.trim();
 
         if !line.is_empty() {
-            return Ok(Some(
-                line.to_string().split(' ').map(|s| s.to_string()).collect(),
-            ));
+            return Ok(Some(line.split(' ').map(|s| s.to_string()).collect()));
         }
     }
 

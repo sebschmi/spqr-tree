@@ -2,6 +2,8 @@ use std::borrow::Cow;
 
 use num_traits::bounds::UpperBounded;
 
+pub mod implementations;
+
 /// An undirected graph without multiedges or self-loops.
 pub trait StaticGraph {
     type NodeIndex: Copy
@@ -56,4 +58,12 @@ pub trait StaticGraph {
 
     /// Returns the unique edge between the two given nodes, if it exists.
     fn edge_between(&self, u: Self::NodeIndex, v: Self::NodeIndex) -> Option<Self::EdgeIndex>;
+}
+
+pub trait NamedNodeData {
+    fn name(&self) -> &String;
+}
+
+pub trait NamedEdgeData {
+    fn name(&self) -> &String;
 }

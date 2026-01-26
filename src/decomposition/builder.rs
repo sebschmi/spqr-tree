@@ -4,14 +4,16 @@ use num_traits::bounds::UpperBounded;
 use smallvec::SmallVec;
 use tagged_vec::TaggedVec;
 
-use crate::decomposition::{
-    Block, Component, CutNode, SPQRDecomposition, SPQRDecompositionEdgeData,
-    SPQRDecompositionNodeData, SPQREdge, SPQRNode, SPQRNodeType,
-    graph::StaticGraph,
-    indices::{
-        BlockIndex, ComponentIndex, CutNodeIndex, OptionalCutNodeIndex, SPQREdgeIndex,
-        SPQRNodeIndex,
+use crate::{
+    decomposition::{
+        Block, Component, CutNode, SPQRDecomposition, SPQRDecompositionEdgeData,
+        SPQRDecompositionNodeData, SPQREdge, SPQRNode, SPQRNodeType,
+        indices::{
+            BlockIndex, ComponentIndex, CutNodeIndex, OptionalCutNodeIndex, SPQREdgeIndex,
+            SPQRNodeIndex,
+        },
     },
+    graph::StaticGraph,
 };
 
 pub struct SPQRDecompositionBuilder<'graph, Graph: StaticGraph> {
