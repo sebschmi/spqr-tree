@@ -190,8 +190,16 @@ pub fn read<'graph, Graph: StaticGraph>(
                     .node_index_from_name(node_name_v)
                     .ok_or_else(|| ReadError::UnknownNodeName(node_name_v.clone()))?;
                 let edge_index = graph
-                    .edge_between(node_index_u, node_index_v)
-                    .ok_or_else(|| ReadError::EdgeDoesNotExist(edge_name.clone()))?;
+                    .edge_index_from_name(edge_name)
+                    .ok_or_else(|| ReadError::UnknownEdgeName(edge_name.clone()))?;
+
+                let endpoints = graph.edge_endpoints(edge_index);
+                if !((endpoints.0 == node_index_u && endpoints.1 == node_index_v)
+                    || (endpoints.0 == node_index_v && endpoints.1 == node_index_u))
+                {
+                    return Err(ReadError::EdgeEndpointMismatch(edge_name.clone()));
+                }
+
                 let spqr_node_index = *name_to_spqr_node_index
                     .get(spqr_node_name)
                     .ok_or_else(|| ReadError::UnknownSPQRNodeName(spqr_node_name.clone()))?;

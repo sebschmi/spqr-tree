@@ -84,6 +84,11 @@ pub enum ReadError {
     #[error("an E-line is missing a node name")]
     MissingNodeNameInELine,
 
-    #[error("the declared edge {0} does not exist in the graph")]
-    EdgeDoesNotExist(String),
+    #[error("unknown edge name: {0}")]
+    UnknownEdgeName(String),
+
+    #[error(
+        "the edge {0} is declared with different endpoints in the SPQR decomposition and the base graph"
+    )]
+    EdgeEndpointMismatch(String),
 }

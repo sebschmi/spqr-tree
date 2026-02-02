@@ -56,8 +56,12 @@ pub trait StaticGraph {
     /// Returns the endpoints of the given edge as a tuple of node indices.
     fn edge_endpoints(&self, edge: Self::EdgeIndex) -> (Self::NodeIndex, Self::NodeIndex);
 
-    /// Returns the unique edge between the two given nodes, if it exists.
-    fn edge_between(&self, u: Self::NodeIndex, v: Self::NodeIndex) -> Option<Self::EdgeIndex>;
+    /// Returns the edges between the two given nodes.
+    fn edges_between(
+        &self,
+        u: Self::NodeIndex,
+        v: Self::NodeIndex,
+    ) -> impl Iterator<Item = Self::EdgeIndex>;
 }
 
 pub trait NamedNodeData {
