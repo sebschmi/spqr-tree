@@ -1,8 +1,6 @@
 use std::borrow::Cow;
 
-use bidirected_adjacency_array::index::GraphIndexInteger;
-
-use crate::decomposition::indices::GraphIndex;
+use crate::decomposition::indices::{GraphIndex, GraphIndexInteger};
 
 pub mod implementations;
 
