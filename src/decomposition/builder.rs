@@ -1,6 +1,5 @@
 use std::iter;
 
-use num_traits::bounds::UpperBounded;
 use smallvec::SmallVec;
 use tagged_vec::TaggedVec;
 
@@ -9,8 +8,8 @@ use crate::{
         Block, Component, CutNode, SPQRDecomposition, SPQRDecompositionEdgeData,
         SPQRDecompositionNodeData, SPQREdge, SPQRNode, SPQRNodeType,
         indices::{
-            BlockIndex, ComponentIndex, CutNodeIndex, OptionalCutNodeIndex, SPQREdgeIndex,
-            SPQRNodeIndex,
+            BlockIndex, ComponentIndex, CutNodeIndex, OptionalBlockIndex, OptionalComponentIndex,
+            OptionalCutNodeIndex, OptionalSPQRNodeIndex, SPQREdgeIndex, SPQRNodeIndex,
         },
     },
     graph::StaticGraph,
@@ -18,13 +17,28 @@ use crate::{
 
 pub struct SPQRDecompositionBuilder<'graph, Graph: StaticGraph> {
     graph: &'graph Graph,
-    components: TaggedVec<ComponentIndex<Graph>, Component<Graph>>,
-    blocks: TaggedVec<BlockIndex<Graph>, Block<Graph>>,
-    cut_nodes: TaggedVec<CutNodeIndex<Graph>, CutNode<Graph>>,
-    spqr_nodes: TaggedVec<SPQRNodeIndex<Graph>, SPQRNode<Graph>>,
-    spqr_edges: TaggedVec<SPQREdgeIndex<Graph>, SPQREdge<Graph>>,
-    node_data: TaggedVec<Graph::NodeIndex, SPQRDecompositionNodeData<Graph>>,
-    edge_data: TaggedVec<Graph::EdgeIndex, SPQRDecompositionEdgeData<Graph>>,
+    components: TaggedVec<ComponentIndex<Graph::IndexType>, Component<Graph>>,
+    blocks: TaggedVec<BlockIndex<Graph::IndexType>, Block<Graph>>,
+    cut_nodes: TaggedVec<CutNodeIndex<Graph::IndexType>, CutNode<Graph>>,
+    spqr_nodes: TaggedVec<SPQRNodeIndex<Graph::IndexType>, SPQRNode<Graph>>,
+    spqr_edges: TaggedVec<SPQREdgeIndex<Graph::IndexType>, SPQREdge<Graph>>,
+    node_data: TaggedVec<Graph::NodeIndex, SPQRDecompositionNodeDataBuilder<Graph>>,
+    edge_data: TaggedVec<Graph::EdgeIndex, SPQRDecompositionEdgeDataBuilder<Graph>>,
+}
+
+struct SPQRDecompositionNodeDataBuilder<Graph: StaticGraph> {
+    component_index: OptionalComponentIndex<Graph::IndexType>,
+    block_indices: SmallVec<[BlockIndex<Graph::IndexType>; 1]>,
+    cut_node_index: OptionalCutNodeIndex<Graph::IndexType>,
+    spqr_node_indices: SmallVec<[SPQRNodeIndex<Graph::IndexType>; 1]>,
+    extra_data: String,
+}
+
+struct SPQRDecompositionEdgeDataBuilder<Graph: StaticGraph> {
+    component_index: OptionalComponentIndex<Graph::IndexType>,
+    block_index: OptionalBlockIndex<Graph::IndexType>,
+    spqr_node_index: OptionalSPQRNodeIndex<Graph::IndexType>,
+    extra_data: String,
 }
 
 impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
@@ -36,19 +50,19 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
             cut_nodes: TaggedVec::new(),
             spqr_nodes: TaggedVec::new(),
             spqr_edges: TaggedVec::new(),
-            node_data: iter::repeat_with(|| SPQRDecompositionNodeData {
-                component_index: ComponentIndex::max_value(),
+            node_data: iter::repeat_with(|| SPQRDecompositionNodeDataBuilder {
+                component_index: OptionalComponentIndex::new_none(),
                 block_indices: SmallVec::new(),
-                cut_node_index: OptionalCutNodeIndex::none(),
+                cut_node_index: OptionalCutNodeIndex::new_none(),
                 spqr_node_indices: SmallVec::new(),
                 extra_data: String::new(),
             })
             .take(graph.node_count())
             .collect(),
-            edge_data: iter::repeat_with(|| SPQRDecompositionEdgeData {
-                component_index: ComponentIndex::max_value(),
-                block_index: BlockIndex::max_value(),
-                spqr_node_index: SPQRNodeIndex::max_value(),
+            edge_data: iter::repeat_with(|| SPQRDecompositionEdgeDataBuilder {
+                component_index: OptionalComponentIndex::new_none(),
+                block_index: OptionalBlockIndex::new_none(),
+                spqr_node_index: OptionalSPQRNodeIndex::new_none(),
                 extra_data: String::new(),
             })
             .take(graph.edge_count())
@@ -59,24 +73,21 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
     /// Adds a component to the decomposition.
     ///
     /// Edges are automatically assigned to the component based on their endpoints.
-    pub fn add_component(&mut self, nodes: Vec<Graph::NodeIndex>) -> ComponentIndex<Graph> {
+    pub fn add_component(
+        &mut self,
+        nodes: Vec<Graph::NodeIndex>,
+    ) -> ComponentIndex<Graph::IndexType> {
         assert!(!nodes.is_empty());
 
         self.components.push_in_place(|index| {
             for node in nodes.iter().copied() {
-                assert_eq!(
-                    self.node_data[node].component_index,
-                    ComponentIndex::max_value(),
-                );
-                self.node_data[node].component_index = index;
+                assert!(self.node_data[node].component_index.is_none());
+                self.node_data[node].component_index = index.into();
 
                 for edge in self.graph.incident_edges(node) {
-                    if self.edge_data[edge].component_index != index {
-                        assert_eq!(
-                            self.edge_data[edge].component_index,
-                            ComponentIndex::max_value(),
-                        );
-                        self.edge_data[edge].component_index = index;
+                    if self.edge_data[edge].component_index != Some(index).into() {
+                        assert!(self.edge_data[edge].component_index.is_none());
+                        self.edge_data[edge].component_index = index.into();
                     }
                 }
             }
@@ -101,31 +112,31 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
     /// Cut nodes are identified once [`build`](Self::build) is called.
     pub fn add_block(
         &mut self,
-        component: ComponentIndex<Graph>,
+        component: ComponentIndex<Graph::IndexType>,
         nodes: Vec<Graph::NodeIndex>,
-    ) -> BlockIndex<Graph> {
+    ) -> BlockIndex<Graph::IndexType> {
         assert!(!nodes.is_empty());
 
         self.blocks.push_in_place(|index| {
             self.components[component].blocks.push(index);
 
             for node in nodes.iter().copied() {
-                assert_eq!(self.node_data[node].component_index, component);
+                assert_eq!(self.node_data[node].component_index, Some(component).into());
                 assert!(!self.node_data[node].block_indices.contains(&index));
                 self.node_data[node].block_indices.push(index);
             }
 
             for node in nodes.iter().copied() {
                 for edge in self.graph.incident_edges(node) {
-                    if self.edge_data[edge].block_index != index {
+                    if self.edge_data[edge].block_index != Some(index).into() {
                         let (a, b) = self.graph.edge_endpoints(edge);
 
                         if self.node_data[a].block_indices.contains(&index)
                             && self.node_data[b].block_indices.contains(&index)
                         {
                             // Both endpoints are in the block, so the edge must be in the block.
-                            assert_eq!(self.edge_data[edge].block_index, BlockIndex::max_value());
-                            self.edge_data[edge].block_index = index;
+                            assert!(self.edge_data[edge].block_index.is_none());
+                            self.edge_data[edge].block_index = index.into();
                         }
                     }
                 }
@@ -144,20 +155,22 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
     pub fn add_cut_node(
         &mut self,
         cut_node: Graph::NodeIndex,
-        blocks: Vec<BlockIndex<Graph>>,
-    ) -> CutNodeIndex<Graph> {
+        blocks: Vec<BlockIndex<Graph::IndexType>>,
+    ) -> CutNodeIndex<Graph::IndexType> {
         assert!(!blocks.is_empty());
 
         self.cut_nodes.push_in_place(|cut_node_index| {
             assert!(self.node_data[cut_node].cut_node_index.is_none());
             self.node_data[cut_node].cut_node_index = Some(cut_node_index).into();
 
-            self.components[self.node_data[cut_node].component_index]
+            let component_index = self.node_data[cut_node].component_index.unwrap();
+
+            self.components[component_index]
                 .cut_nodes
                 .push(cut_node_index);
 
             CutNode {
-                component: self.node_data[cut_node].component_index,
+                component: component_index,
                 node: cut_node,
                 adjacent_blocks: blocks.into(),
             }
@@ -169,10 +182,10 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
     /// Edges are not added to the component and must be added separately.
     pub fn add_spqr_node(
         &mut self,
-        block: BlockIndex<Graph>,
+        block: BlockIndex<Graph::IndexType>,
         nodes: Vec<Graph::NodeIndex>,
         spqr_node_type: SPQRNodeType,
-    ) -> SPQRNodeIndex<Graph> {
+    ) -> SPQRNodeIndex<Graph::IndexType> {
         assert!(nodes.len() >= 2);
 
         self.spqr_nodes.push_in_place(|index| {
@@ -181,7 +194,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
             for node in nodes.iter().copied() {
                 assert_eq!(
                     self.node_data[node].component_index,
-                    self.blocks[block].component
+                    self.blocks[block].component.into()
                 );
                 assert!(self.node_data[node].block_indices.contains(&block));
                 assert!(!self.node_data[node].spqr_node_indices.contains(&index));
@@ -203,18 +216,15 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
     pub fn add_edge_to_spqr_node(
         &mut self,
         edge: Graph::EdgeIndex,
-        spqr_node: SPQRNodeIndex<Graph>,
+        spqr_node: SPQRNodeIndex<Graph::IndexType>,
     ) {
-        assert_eq!(
-            self.edge_data[edge].spqr_node_index,
-            SPQRNodeIndex::max_value()
-        );
+        assert!(self.edge_data[edge].spqr_node_index.is_none());
 
         let (a, b) = self.graph.edge_endpoints(edge);
         assert!(self.node_data[a].spqr_node_indices.contains(&spqr_node));
         assert!(self.node_data[b].spqr_node_indices.contains(&spqr_node));
 
-        self.edge_data[edge].spqr_node_index = spqr_node;
+        self.edge_data[edge].spqr_node_index = spqr_node.into();
         self.spqr_nodes[spqr_node].edges.push(edge);
     }
 
@@ -225,10 +235,13 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
     /// If the block index is `None`, it is inferred from the SPQR nodes.
     pub fn add_spqr_edge(
         &mut self,
-        block: Option<BlockIndex<Graph>>,
-        endpoints: (SPQRNodeIndex<Graph>, SPQRNodeIndex<Graph>),
+        block: OptionalBlockIndex<Graph::IndexType>,
+        endpoints: (
+            SPQRNodeIndex<Graph::IndexType>,
+            SPQRNodeIndex<Graph::IndexType>,
+        ),
         virtual_edge: (Graph::NodeIndex, Graph::NodeIndex),
-    ) -> SPQREdgeIndex<Graph> {
+    ) -> SPQREdgeIndex<Graph::IndexType> {
         let block = block.unwrap_or_else(|| {
             let block_u = self.spqr_nodes[endpoints.0].block;
             let block_v = self.spqr_nodes[endpoints.1].block;
@@ -275,30 +288,30 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
     pub fn build(mut self) -> SPQRDecomposition<'graph, Graph> {
         // Ensure that all nodes have actually been assigned to components, blocks, and SPQR nodes.
         for node_index in self.graph.node_indices() {
-            let SPQRDecompositionNodeData {
+            let SPQRDecompositionNodeDataBuilder {
                 component_index,
                 block_indices,
                 spqr_node_indices,
                 ..
             } = &self.node_data[node_index];
 
-            debug_assert_ne!(*component_index, ComponentIndex::max_value());
+            debug_assert!(component_index.is_some());
             debug_assert!(!block_indices.is_empty());
             debug_assert!(!spqr_node_indices.is_empty());
         }
 
         // Ensure that all edges have actually been assigned to components, blocks, and SPQR nodes.
         for edge_index in self.graph.edge_indices() {
-            let SPQRDecompositionEdgeData {
+            let SPQRDecompositionEdgeDataBuilder {
                 component_index,
                 block_index,
                 spqr_node_index,
                 ..
             } = &self.edge_data[edge_index];
 
-            debug_assert_ne!(*component_index, ComponentIndex::max_value());
-            debug_assert_ne!(*block_index, BlockIndex::max_value());
-            debug_assert_ne!(*spqr_node_index, SPQRNodeIndex::max_value());
+            debug_assert!(component_index.is_some());
+            debug_assert!(block_index.is_some());
+            debug_assert!(spqr_node_index.is_some());
         }
 
         // Identify cut nodes.
@@ -313,7 +326,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
             // Nodes in multiple blocks are cut nodes.
             if block_indices.len() >= 2 {
                 let block_indices = block_indices.iter().copied().collect();
-                let component_index = self.node_data[node_index].component_index;
+                let component_index = self.node_data[node_index].component_index.unwrap();
 
                 self.cut_nodes.push_in_place(|cut_node_index| {
                     self.components[component_index]
@@ -339,16 +352,47 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
             cut_nodes: self.cut_nodes,
             spqr_nodes: self.spqr_nodes,
             spqr_edges: self.spqr_edges,
-            node_data: self.node_data,
-            edge_data: self.edge_data,
+            node_data: self
+                .node_data
+                .into_values_iter()
+                .map(SPQRDecompositionNodeDataBuilder::build)
+                .collect(),
+            edge_data: self
+                .edge_data
+                .into_values_iter()
+                .map(SPQRDecompositionEdgeDataBuilder::build)
+                .collect(),
         }
     }
 
     /// Returns the block index of the given SPQR node.
     pub fn spqr_node_block_index(
         &self,
-        spqr_node_index: SPQRNodeIndex<Graph>,
-    ) -> BlockIndex<Graph> {
+        spqr_node_index: SPQRNodeIndex<Graph::IndexType>,
+    ) -> BlockIndex<Graph::IndexType> {
         self.spqr_nodes[spqr_node_index].block
+    }
+}
+
+impl<Graph: StaticGraph> SPQRDecompositionNodeDataBuilder<Graph> {
+    fn build(self) -> SPQRDecompositionNodeData<Graph> {
+        SPQRDecompositionNodeData {
+            component_index: self.component_index.unwrap(),
+            block_indices: self.block_indices,
+            cut_node_index: self.cut_node_index,
+            spqr_node_indices: self.spqr_node_indices,
+            extra_data: self.extra_data,
+        }
+    }
+}
+
+impl<Graph: StaticGraph> SPQRDecompositionEdgeDataBuilder<Graph> {
+    fn build(self) -> SPQRDecompositionEdgeData<Graph> {
+        SPQRDecompositionEdgeData {
+            component_index: self.component_index.unwrap(),
+            block_index: self.block_index.unwrap(),
+            spqr_node_index: self.spqr_node_index.unwrap(),
+            extra_data: self.extra_data,
+        }
     }
 }

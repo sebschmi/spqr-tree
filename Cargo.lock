@@ -10,9 +10,9 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "bidirected-adjacency-array"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66aac4ee50a80158f6244becf31eccf85db3757514bd7498a2727798841b8c60"
+checksum = "aaf4573b429d0b1cbf4f5511df10eba1b5ec2e533a114ca81e161de24943ffad"
 dependencies = [
  "log",
  "num-traits",
@@ -38,9 +38,9 @@ dependencies = [
 
 [[package]]
 name = "optional-numeric-index"
-version = "0.3.1"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbd904b2723a0239761861bd366f97f91c67dfc6699a050b6b56f982b8f9746d"
+checksum = "493b49784a478a9073688afa9023972a3452639b0e842fcd41b0308b1de78353"
 dependencies = [
  "num-traits",
 ]
@@ -75,6 +75,7 @@ version = "0.1.0"
 dependencies = [
  "bidirected-adjacency-array",
  "num-traits",
+ "optional-numeric-index",
  "smallvec",
  "tagged-vec",
  "thiserror",

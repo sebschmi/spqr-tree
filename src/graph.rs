@@ -1,30 +1,19 @@
 use std::borrow::Cow;
 
-use num_traits::bounds::UpperBounded;
+use bidirected_adjacency_array::index::GraphIndexInteger;
+
+use crate::decomposition::indices::GraphIndex;
 
 pub mod implementations;
 
 /// An undirected graph without multiedges or self-loops.
 pub trait StaticGraph {
-    type NodeIndex: Copy
-        + std::fmt::Debug
-        + std::fmt::Display
-        + Eq
-        + std::hash::Hash
-        + Ord
-        + From<usize>
-        + Into<usize>
-        + UpperBounded;
+    /// The integer type used for indices in this graph.
+    type IndexType: GraphIndexInteger;
 
-    type EdgeIndex: Copy
-        + std::fmt::Debug
-        + std::fmt::Display
-        + Eq
-        + std::hash::Hash
-        + Ord
-        + From<usize>
-        + Into<usize>
-        + UpperBounded;
+    type NodeIndex: GraphIndex;
+
+    type EdgeIndex: GraphIndex;
 
     /// Returns an iterator over all node indices in the graph.
     fn node_indices(&self) -> impl Iterator<Item = Self::NodeIndex>;
@@ -45,12 +34,14 @@ pub trait StaticGraph {
     fn edge_index_from_name(&self, name: &str) -> Option<Self::EdgeIndex>;
 
     /// Returns the name of the given node.
-    fn node_name(&self, node_index: Self::NodeIndex) -> Cow<'_, String>;
+    fn node_name(&self, node_index: Self::NodeIndex) -> Cow<'_, str>;
 
     /// Returns the name of the given edge.
-    fn edge_name(&self, edge_index: Self::EdgeIndex) -> Cow<'_, String>;
+    fn edge_name(&self, edge_index: Self::EdgeIndex) -> Cow<'_, str>;
 
     /// Returns an iterator over the incident edges of the given node.
+    ///
+    /// Each edge is returned exactly once.
     fn incident_edges(&self, node: Self::NodeIndex) -> impl Iterator<Item = Self::EdgeIndex>;
 
     /// Returns the endpoints of the given edge as a tuple of node indices.
@@ -65,9 +56,9 @@ pub trait StaticGraph {
 }
 
 pub trait NamedNodeData {
-    fn name(&self) -> &String;
+    fn name(&'_ self) -> Cow<'_, str>;
 }
 
 pub trait NamedEdgeData {
-    fn name(&self) -> &String;
+    fn name(&'_ self) -> Cow<'_, str>;
 }

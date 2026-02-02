@@ -22,36 +22,36 @@ pub mod indices;
 /// The decomposition of a biconnected component into its triconnected components is called the [SPQR tree](https://en.wikipedia.org/wiki/SPQR_tree).
 pub struct SPQRDecomposition<'graph, Graph: StaticGraph> {
     graph: &'graph Graph,
-    components: TaggedVec<ComponentIndex<Graph>, Component<Graph>>,
-    blocks: TaggedVec<BlockIndex<Graph>, Block<Graph>>,
-    cut_nodes: TaggedVec<CutNodeIndex<Graph>, CutNode<Graph>>,
-    spqr_nodes: TaggedVec<SPQRNodeIndex<Graph>, SPQRNode<Graph>>,
-    spqr_edges: TaggedVec<SPQREdgeIndex<Graph>, SPQREdge<Graph>>,
+    components: TaggedVec<ComponentIndex<Graph::IndexType>, Component<Graph>>,
+    blocks: TaggedVec<BlockIndex<Graph::IndexType>, Block<Graph>>,
+    cut_nodes: TaggedVec<CutNodeIndex<Graph::IndexType>, CutNode<Graph>>,
+    spqr_nodes: TaggedVec<SPQRNodeIndex<Graph::IndexType>, SPQRNode<Graph>>,
+    spqr_edges: TaggedVec<SPQREdgeIndex<Graph::IndexType>, SPQREdge<Graph>>,
     node_data: TaggedVec<Graph::NodeIndex, SPQRDecompositionNodeData<Graph>>,
     edge_data: TaggedVec<Graph::EdgeIndex, SPQRDecompositionEdgeData<Graph>>,
 }
 
 pub struct Component<Graph: StaticGraph> {
     nodes: Vec<Graph::NodeIndex>,
-    blocks: Vec<BlockIndex<Graph>>,
-    cut_nodes: Vec<CutNodeIndex<Graph>>,
+    blocks: Vec<BlockIndex<Graph::IndexType>>,
+    cut_nodes: Vec<CutNodeIndex<Graph::IndexType>>,
 }
 
 pub struct Block<Graph: StaticGraph> {
-    component: ComponentIndex<Graph>,
+    component: ComponentIndex<Graph::IndexType>,
     nodes: Vec<Graph::NodeIndex>,
-    spqr_nodes: Vec<SPQRNodeIndex<Graph>>,
-    spqr_edges: Vec<SPQREdgeIndex<Graph>>,
+    spqr_nodes: Vec<SPQRNodeIndex<Graph::IndexType>>,
+    spqr_edges: Vec<SPQREdgeIndex<Graph::IndexType>>,
 }
 
 pub struct CutNode<Graph: StaticGraph> {
-    component: ComponentIndex<Graph>,
+    component: ComponentIndex<Graph::IndexType>,
     node: Graph::NodeIndex,
-    adjacent_blocks: SmallVec<[BlockIndex<Graph>; 2]>,
+    adjacent_blocks: SmallVec<[BlockIndex<Graph::IndexType>; 2]>,
 }
 
 pub struct SPQRNode<Graph: StaticGraph> {
-    block: BlockIndex<Graph>,
+    block: BlockIndex<Graph::IndexType>,
     nodes: Vec<Graph::NodeIndex>,
     edges: Vec<Graph::EdgeIndex>,
     spqr_node_type: SPQRNodeType,
@@ -66,22 +66,27 @@ pub enum SPQRNodeType {
 
 /// An edge in the SPQR tree connecting two SPQR nodes.
 pub struct SPQREdge<Graph: StaticGraph> {
-    endpoints: (SPQRNodeIndex<Graph>, SPQRNodeIndex<Graph>),
+    endpoints: (
+        SPQRNodeIndex<Graph::IndexType>,
+        SPQRNodeIndex<Graph::IndexType>,
+    ),
     virtual_edge: (Graph::NodeIndex, Graph::NodeIndex),
 }
 
-pub struct SPQRDecompositionNodeData<Graph: StaticGraph> {
-    component_index: ComponentIndex<Graph>,
-    block_indices: SmallVec<[BlockIndex<Graph>; 1]>,
-    cut_node_index: OptionalCutNodeIndex<Graph>,
-    spqr_node_indices: SmallVec<[SPQRNodeIndex<Graph>; 1]>,
+#[expect(dead_code)]
+struct SPQRDecompositionNodeData<Graph: StaticGraph> {
+    component_index: ComponentIndex<Graph::IndexType>,
+    block_indices: SmallVec<[BlockIndex<Graph::IndexType>; 1]>,
+    cut_node_index: OptionalCutNodeIndex<Graph::IndexType>,
+    spqr_node_indices: SmallVec<[SPQRNodeIndex<Graph::IndexType>; 1]>,
     extra_data: String,
 }
 
-pub struct SPQRDecompositionEdgeData<Graph: StaticGraph> {
-    component_index: ComponentIndex<Graph>,
-    block_index: BlockIndex<Graph>,
-    spqr_node_index: SPQRNodeIndex<Graph>,
+#[expect(dead_code)]
+struct SPQRDecompositionEdgeData<Graph: StaticGraph> {
+    component_index: ComponentIndex<Graph::IndexType>,
+    block_index: BlockIndex<Graph::IndexType>,
+    spqr_node_index: SPQRNodeIndex<Graph::IndexType>,
     extra_data: String,
 }
 
@@ -90,20 +95,20 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
         self.graph
     }
 
-    pub fn iter_component_indices(&self) -> impl Iterator<Item = ComponentIndex<Graph>> {
+    pub fn iter_component_indices(&self) -> impl Iterator<Item = ComponentIndex<Graph::IndexType>> {
         self.components.iter_indices()
     }
 
     pub fn iter_components(
         &self,
-    ) -> impl Iterator<Item = (ComponentIndex<Graph>, &Component<Graph>)> {
+    ) -> impl Iterator<Item = (ComponentIndex<Graph::IndexType>, &Component<Graph>)> {
         self.components.iter()
     }
 
     pub fn iter_blocks_in_component(
         &self,
-        component_index: ComponentIndex<Graph>,
-    ) -> impl Iterator<Item = (BlockIndex<Graph>, &Block<Graph>)> {
+        component_index: ComponentIndex<Graph::IndexType>,
+    ) -> impl Iterator<Item = (BlockIndex<Graph::IndexType>, &Block<Graph>)> {
         self.components[component_index]
             .blocks
             .iter()
@@ -113,8 +118,8 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
 
     pub fn iter_spqr_nodes_in_block(
         &self,
-        block_index: BlockIndex<Graph>,
-    ) -> impl Iterator<Item = (SPQRNodeIndex<Graph>, &SPQRNode<Graph>)> {
+        block_index: BlockIndex<Graph::IndexType>,
+    ) -> impl Iterator<Item = (SPQRNodeIndex<Graph::IndexType>, &SPQRNode<Graph>)> {
         self.blocks[block_index]
             .spqr_nodes
             .iter()
@@ -124,8 +129,8 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
 
     pub fn iter_spqr_edges_in_block(
         &self,
-        block_index: BlockIndex<Graph>,
-    ) -> impl Iterator<Item = (SPQREdgeIndex<Graph>, &SPQREdge<Graph>)> {
+        block_index: BlockIndex<Graph::IndexType>,
+    ) -> impl Iterator<Item = (SPQREdgeIndex<Graph::IndexType>, &SPQREdge<Graph>)> {
         self.blocks[block_index]
             .spqr_edges
             .iter()
@@ -145,7 +150,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
         &self.edge_data[edge_index].extra_data
     }
 
-    pub fn spqr_node_name(&self, spqr_node_index: SPQRNodeIndex<Graph>) -> String {
+    pub fn spqr_node_name(&self, spqr_node_index: SPQRNodeIndex<Graph::IndexType>) -> String {
         match self.spqr_nodes[spqr_node_index].spqr_node_type() {
             SPQRNodeType::SNode => format!("S{spqr_node_index}"),
             SPQRNodeType::PNode => format!("P{spqr_node_index}"),
@@ -155,12 +160,12 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
 
     pub fn cut_node_index_to_node_index(
         &self,
-        cut_node_index: CutNodeIndex<Graph>,
+        cut_node_index: CutNodeIndex<Graph::IndexType>,
     ) -> Graph::NodeIndex {
         self.cut_nodes[cut_node_index].node
     }
 
-    pub fn cut_node(&self, cut_node_index: CutNodeIndex<Graph>) -> &CutNode<Graph> {
+    pub fn cut_node(&self, cut_node_index: CutNodeIndex<Graph::IndexType>) -> &CutNode<Graph> {
         &self.cut_nodes[cut_node_index]
     }
 }
@@ -170,7 +175,7 @@ impl<Graph: StaticGraph> Component<Graph> {
         self.nodes.iter().copied()
     }
 
-    pub fn iter_cut_nodes(&self) -> impl Iterator<Item = CutNodeIndex<Graph>> {
+    pub fn iter_cut_nodes(&self) -> impl Iterator<Item = CutNodeIndex<Graph::IndexType>> {
         self.cut_nodes.iter().copied()
     }
 }
@@ -182,7 +187,7 @@ impl<Graph: StaticGraph> Block<Graph> {
 }
 
 impl<Graph: StaticGraph> CutNode<Graph> {
-    pub fn component(&self) -> ComponentIndex<Graph> {
+    pub fn component(&self) -> ComponentIndex<Graph::IndexType> {
         self.component
     }
 
@@ -190,13 +195,13 @@ impl<Graph: StaticGraph> CutNode<Graph> {
         self.node
     }
 
-    pub fn iter_adjacent_blocks(&self) -> impl Iterator<Item = BlockIndex<Graph>> {
+    pub fn iter_adjacent_blocks(&self) -> impl Iterator<Item = BlockIndex<Graph::IndexType>> {
         self.adjacent_blocks.iter().copied()
     }
 }
 
 impl<Graph: StaticGraph> SPQRNode<Graph> {
-    pub fn block(&self) -> BlockIndex<Graph> {
+    pub fn block(&self) -> BlockIndex<Graph::IndexType> {
         self.block
     }
 
@@ -214,7 +219,12 @@ impl<Graph: StaticGraph> SPQRNode<Graph> {
 }
 
 impl<Graph: StaticGraph> SPQREdge<Graph> {
-    pub fn endpoints(&self) -> (SPQRNodeIndex<Graph>, SPQRNodeIndex<Graph>) {
+    pub fn endpoints(
+        &self,
+    ) -> (
+        SPQRNodeIndex<Graph::IndexType>,
+        SPQRNodeIndex<Graph::IndexType>,
+    ) {
         self.endpoints
     }
 

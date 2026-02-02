@@ -170,7 +170,7 @@ pub fn read<'graph, Graph: StaticGraph>(
                 }
 
                 let spqr_edge_index = builder.add_spqr_edge(
-                    Some(block_index),
+                    Some(block_index).into(),
                     (spqr_node_index_u, spqr_node_index_v),
                     (node_index_u, node_index_v),
                 );
