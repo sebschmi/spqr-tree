@@ -9,12 +9,40 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
+name = "bidirected-adjacency-array"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "66aac4ee50a80158f6244becf31eccf85db3757514bd7498a2727798841b8c60"
+dependencies = [
+ "log",
+ "num-traits",
+ "optional-numeric-index",
+ "tagged-vec",
+ "thiserror",
+]
+
+[[package]]
+name = "log"
+version = "0.4.29"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
+
+[[package]]
 name = "num-traits"
 version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "optional-numeric-index"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cbd904b2723a0239761861bd366f97f91c67dfc6699a050b6b56f982b8f9746d"
+dependencies = [
+ "num-traits",
 ]
 
 [[package]]
@@ -45,6 +73,7 @@ checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
 name = "spqr-tree"
 version = "0.1.0"
 dependencies = [
+ "bidirected-adjacency-array",
  "num-traits",
  "smallvec",
  "tagged-vec",
