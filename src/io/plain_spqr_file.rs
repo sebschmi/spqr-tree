@@ -16,7 +16,8 @@ mod read_utils;
 #[cfg(test)]
 pub mod tests;
 
-pub fn read<'graph, Graph: StaticGraph>(
+/// Read an SPQR decomposition in the plain SPQR file format.
+pub fn read_plain_spqr<'graph, Graph: StaticGraph>(
     graph: &'graph Graph,
     reader: &mut impl Read,
 ) -> Result<SPQRDecomposition<'graph, Graph>, ReadError> {
@@ -35,6 +36,10 @@ pub fn read<'graph, Graph: StaticGraph>(
     }
 
     let mut builder = SPQRDecompositionBuilder::new(graph);
+    let name_to_node_index: HashMap<_, _> = graph
+        .node_indices()
+        .map(|node_index| (graph.node_name(node_index).into_owned(), node_index))
+        .collect();
     let mut name_to_component_index = HashMap::new();
     let mut name_to_block_index = HashMap::new();
     let mut name_to_spqr_node_index = HashMap::new();
@@ -48,8 +53,9 @@ pub fn read<'graph, Graph: StaticGraph>(
                     .iter()
                     .skip(2)
                     .map(|node| {
-                        graph
-                            .node_index_from_name(node)
+                        name_to_node_index
+                            .get(node)
+                            .copied()
                             .ok_or_else(|| ReadError::UnknownNodeName(node.clone()))
                     })
                     .collect::<Result<Vec<_>, _>>()?;
@@ -64,8 +70,9 @@ pub fn read<'graph, Graph: StaticGraph>(
             "N" => {
                 let node_name = line.get(1).ok_or(ReadError::MissingNodeNameInNLine)?;
                 let extra_data = line[2..].join(" ");
-                let node_index = graph
-                    .node_index_from_name(node_name)
+                let node_index = name_to_node_index
+                    .get(node_name)
+                    .copied()
                     .ok_or_else(|| ReadError::UnknownNodeName(node_name.clone()))?;
                 builder.add_extra_data_to_node(node_index, extra_data);
             }
@@ -79,8 +86,9 @@ pub fn read<'graph, Graph: StaticGraph>(
                     .iter()
                     .skip(3)
                     .map(|node| {
-                        graph
-                            .node_index_from_name(node)
+                        name_to_node_index
+                            .get(node)
+                            .copied()
                             .ok_or_else(|| ReadError::UnknownNodeName(node.clone()))
                     })
                     .collect::<Result<Vec<_>, _>>()?;
@@ -94,8 +102,9 @@ pub fn read<'graph, Graph: StaticGraph>(
             }
             "C" => {
                 let cut_node_name = line.get(1).ok_or(ReadError::MissingNodeNameInCLine)?;
-                let cut_node_index = graph
-                    .node_index_from_name(cut_node_name)
+                let cut_node_index = name_to_node_index
+                    .get(cut_node_name)
+                    .copied()
                     .ok_or_else(|| ReadError::UnknownNodeName(cut_node_name.clone()))?;
                 let block_indices = line
                     .iter()
@@ -130,8 +139,9 @@ pub fn read<'graph, Graph: StaticGraph>(
                     .iter()
                     .skip(3)
                     .map(|node| {
-                        graph
-                            .node_index_from_name(node)
+                        name_to_node_index
+                            .get(node)
+                            .copied()
                             .ok_or_else(|| ReadError::UnknownNodeName(node.clone()))
                     })
                     .collect::<Result<Vec<_>, _>>()?;
@@ -155,11 +165,13 @@ pub fn read<'graph, Graph: StaticGraph>(
                 let spqr_node_index_v = *name_to_spqr_node_index
                     .get(spqr_node_name_v)
                     .ok_or_else(|| ReadError::UnknownSPQRNodeName(spqr_node_name_v.clone()))?;
-                let node_index_u = graph
-                    .node_index_from_name(node_name_u)
+                let node_index_u = name_to_node_index
+                    .get(node_name_u)
+                    .copied()
                     .ok_or_else(|| ReadError::UnknownNodeName(node_name_u.clone()))?;
-                let node_index_v = graph
-                    .node_index_from_name(node_name_v)
+                let node_index_v = name_to_node_index
+                    .get(node_name_v)
+                    .copied()
                     .ok_or_else(|| ReadError::UnknownNodeName(node_name_v.clone()))?;
 
                 let block_index = builder.spqr_node_block_index(spqr_node_index_u);
@@ -177,27 +189,30 @@ pub fn read<'graph, Graph: StaticGraph>(
                 name_to_spqr_edge_index.insert(spqr_edge_name.clone(), spqr_edge_index);
             }
             "E" => {
-                let edge_name = line.get(1).ok_or(ReadError::MissingEdgeNameInELine)?;
+                let _edge_name = line.get(1).ok_or(ReadError::MissingEdgeNameInELine)?;
                 let spqr_node_name = line.get(2).ok_or(ReadError::MissingSPQRNodeNameInELine)?;
                 let block_name = line.get(3).ok_or(ReadError::MissingBlockNameInELine)?;
                 let node_name_u = line.get(4).ok_or(ReadError::MissingNodeNameInELine)?;
                 let node_name_v = line.get(5).ok_or(ReadError::MissingNodeNameInELine)?;
 
-                let node_index_u = graph
-                    .node_index_from_name(node_name_u)
+                let node_index_u = name_to_node_index
+                    .get(node_name_u)
+                    .copied()
                     .ok_or_else(|| ReadError::UnknownNodeName(node_name_u.clone()))?;
-                let node_index_v = graph
-                    .node_index_from_name(node_name_v)
+                let node_index_v = name_to_node_index
+                    .get(node_name_v)
+                    .copied()
                     .ok_or_else(|| ReadError::UnknownNodeName(node_name_v.clone()))?;
-                let edge_index = graph
-                    .edge_index_from_name(edge_name)
-                    .ok_or_else(|| ReadError::UnknownEdgeName(edge_name.clone()))?;
 
-                let endpoints = graph.edge_endpoints(edge_index);
-                if !((endpoints.0 == node_index_u && endpoints.1 == node_index_v)
-                    || (endpoints.0 == node_index_v && endpoints.1 == node_index_u))
-                {
-                    return Err(ReadError::EdgeEndpointMismatch(edge_name.clone()));
+                let mut edges_between = graph.edges_between(node_index_u, node_index_v);
+                let edge_index = edges_between.next().ok_or_else(|| {
+                    ReadError::NoEdgeBetweenNodes(node_name_u.clone(), node_name_v.clone())
+                })?;
+                if edges_between.next().is_some() {
+                    return Err(ReadError::MultipleEdgesBetweenNodes(
+                        node_name_u.clone(),
+                        node_name_v.clone(),
+                    ));
                 }
 
                 let spqr_node_index = *name_to_spqr_node_index
@@ -218,7 +233,8 @@ pub fn read<'graph, Graph: StaticGraph>(
     Ok(builder.build())
 }
 
-pub fn write<Graph: StaticGraph>(
+/// Write an SPQR decomposition in plain SPQR file format.
+pub fn write_plain_spqr<Graph: StaticGraph>(
     decomposition: &SPQRDecomposition<Graph>,
     writer: &mut impl Write,
 ) -> std::io::Result<()> {
@@ -251,7 +267,7 @@ pub fn write<Graph: StaticGraph>(
         for cut_node_index in component.iter_cut_nodes() {
             let cut_node = decomposition.cut_node(cut_node_index);
             let node_name = decomposition.graph().node_name(cut_node.node());
-            writeln!(writer, "C {node_name}")?;
+            write!(writer, "C {node_name}")?;
 
             for block_index in cut_node.iter_adjacent_blocks() {
                 write!(writer, " B{block_index}")?;
@@ -294,7 +310,7 @@ pub fn write<Graph: StaticGraph>(
                     let (u, v) = decomposition.graph().edge_endpoints(edge_index);
                     let node_name_u = decomposition.graph().node_name(u);
                     let node_name_v = decomposition.graph().node_name(v);
-                    let edge_name = decomposition.graph().edge_name(edge_index);
+                    let edge_name = format!("E{edge_index}");
 
                     write!(
                         writer,

@@ -25,17 +25,8 @@ pub trait StaticGraph {
     /// Returns the number of edges in the graph.
     fn edge_count(&self) -> usize;
 
-    /// Returns the index of the node with the given name.
-    fn node_index_from_name(&self, name: &str) -> Option<Self::NodeIndex>;
-
-    /// Returns the index of the edge with the given name.
-    fn edge_index_from_name(&self, name: &str) -> Option<Self::EdgeIndex>;
-
     /// Returns the name of the given node.
     fn node_name(&self, node_index: Self::NodeIndex) -> Cow<'_, str>;
-
-    /// Returns the name of the given edge.
-    fn edge_name(&self, edge_index: Self::EdgeIndex) -> Cow<'_, str>;
 
     /// Returns an iterator over the incident edges of the given node.
     ///

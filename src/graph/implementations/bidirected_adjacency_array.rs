@@ -1,11 +1,12 @@
 use bidirected_adjacency_array::{
     graph::BidirectedAdjacencyArray,
     index::{EdgeIndex, GraphIndexInteger, NodeIndex},
+    io::gfa1::GfaNodeData,
 };
 
-use crate::graph::StaticGraph;
+use crate::graph::{NamedNodeData, StaticGraph};
 
-impl<IndexType: GraphIndexInteger, NodeData, EdgeData> StaticGraph
+impl<IndexType: GraphIndexInteger, NodeData: NamedNodeData, EdgeData> StaticGraph
     for BidirectedAdjacencyArray<IndexType, NodeData, EdgeData>
 {
     type IndexType = IndexType;
@@ -30,42 +31,8 @@ impl<IndexType: GraphIndexInteger, NodeData, EdgeData> StaticGraph
         BidirectedAdjacencyArray::edge_count(self)
     }
 
-    fn node_index_from_name(&self, name: &str) -> Option<Self::NodeIndex> {
-        let name = if name.starts_with('N') {
-            &name[name.char_indices().nth(1).unwrap().0..]
-        } else {
-            name
-        };
-        let index = name.parse::<usize>().ok()?;
-
-        if index < self.node_count() {
-            Some(Self::NodeIndex::from_usize(index))
-        } else {
-            None
-        }
-    }
-
-    fn edge_index_from_name(&self, name: &str) -> Option<Self::EdgeIndex> {
-        let name = if name.starts_with('E') {
-            &name[name.char_indices().nth(1).unwrap().0..]
-        } else {
-            name
-        };
-        let index = name.parse::<usize>().ok()?;
-
-        if index < self.node_count() {
-            Some(Self::EdgeIndex::from_usize(index))
-        } else {
-            None
-        }
-    }
-
     fn node_name(&self, node_index: Self::NodeIndex) -> std::borrow::Cow<'_, str> {
-        format!("N{node_index}").into()
-    }
-
-    fn edge_name(&self, edge_index: Self::EdgeIndex) -> std::borrow::Cow<'_, str> {
-        format!("E{edge_index}").into()
+        self.node_data(node_index).name()
     }
 
     fn incident_edges(&self, node: Self::NodeIndex) -> impl Iterator<Item = Self::EdgeIndex> {
@@ -89,5 +56,11 @@ impl<IndexType: GraphIndexInteger, NodeData, EdgeData> StaticGraph
             let endpoints = self.edge_endpoints(*edge);
             endpoints.0 == v || endpoints.1 == v
         })
+    }
+}
+
+impl<T: GfaNodeData> NamedNodeData for T {
+    fn name(&'_ self) -> std::borrow::Cow<'_, str> {
+        GfaNodeData::name(self)
     }
 }

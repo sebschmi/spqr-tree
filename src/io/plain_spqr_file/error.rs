@@ -84,11 +84,9 @@ pub enum ReadError {
     #[error("an E-line is missing a node name")]
     MissingNodeNameInELine,
 
-    #[error("unknown edge name: {0}")]
-    UnknownEdgeName(String),
+    #[error("an E-line is declared between {0} and {1}, but no such edge exists in the graph")]
+    NoEdgeBetweenNodes(String, String),
 
-    #[error(
-        "the edge {0} is declared with different endpoints in the SPQR decomposition and the base graph"
-    )]
-    EdgeEndpointMismatch(String),
+    #[error("the graph has a multiedge between {0} and {1}")]
+    MultipleEdgesBetweenNodes(String, String),
 }
