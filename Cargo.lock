@@ -64,9 +64,9 @@ dependencies = [
 
 [[package]]
 name = "tagged-vec"
-version = "0.3.6"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7aaeb1a61db84ad2bfac1da3920289b4cddcb93957313993a3bc1c764925e96"
+checksum = "9539384812cec88f2fe17a0febb4160573cd46ab70276d8c2347216ecf71926c"
 
 [[package]]
 name = "thiserror"
