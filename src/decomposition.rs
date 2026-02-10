@@ -40,6 +40,7 @@ pub struct Component<Graph: StaticGraph> {
 pub struct Block<Graph: StaticGraph> {
     component: ComponentIndex<Graph::IndexType>,
     nodes: Vec<Graph::NodeIndex>,
+    cut_nodes: Vec<CutNodeIndex<Graph::IndexType>>,
     spqr_nodes: Vec<SPQRNodeIndex<Graph::IndexType>>,
     spqr_edges: Vec<SPQREdgeIndex<Graph::IndexType>>,
 }
@@ -55,6 +56,7 @@ pub struct SPQRNode<Graph: StaticGraph> {
     nodes: Vec<Graph::NodeIndex>,
     edges: Vec<Graph::EdgeIndex>,
     spqr_node_type: SPQRNodeType,
+    spqr_edges: SmallVec<[SPQREdgeIndex<Graph::IndexType>; 2]>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -168,6 +170,18 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     pub fn cut_node(&self, cut_node_index: CutNodeIndex<Graph::IndexType>) -> &CutNode<Graph> {
         &self.cut_nodes[cut_node_index]
     }
+
+    /// Returns true if the given node is a cut node.
+    pub fn is_cut_node(&self, node_index: Graph::NodeIndex) -> bool {
+        self.node_data[node_index].cut_node_index.is_some()
+    }
+
+    /// Returns true if the given node has an incident virtual edge.
+    ///
+    /// This also means that the node is part of at least two SPQR nodes.
+    pub fn has_incident_virtual_edge(&self, node_index: Graph::NodeIndex) -> bool {
+        self.node_data[node_index].spqr_node_indices.len() >= 2
+    }
 }
 
 impl<Graph: StaticGraph> Component<Graph> {
@@ -183,6 +197,10 @@ impl<Graph: StaticGraph> Component<Graph> {
 impl<Graph: StaticGraph> Block<Graph> {
     pub fn iter_nodes(&self) -> impl Iterator<Item = Graph::NodeIndex> {
         self.nodes.iter().copied()
+    }
+
+    pub fn iter_cut_nodes(&self) -> impl Iterator<Item = CutNodeIndex<Graph::IndexType>> {
+        self.cut_nodes.iter().copied()
     }
 }
 
@@ -215,6 +233,12 @@ impl<Graph: StaticGraph> SPQRNode<Graph> {
 
     pub fn spqr_node_type(&self) -> SPQRNodeType {
         self.spqr_node_type
+    }
+
+    pub fn iter_incident_spqr_edges(
+        &self,
+    ) -> impl Iterator<Item = SPQREdgeIndex<Graph::IndexType>> {
+        self.spqr_edges.iter().copied()
     }
 }
 

@@ -145,6 +145,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
             Block {
                 component,
                 nodes,
+                cut_nodes: Vec::new(),
                 spqr_nodes: Vec::new(),
                 spqr_edges: Vec::new(),
             }
@@ -168,6 +169,11 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
             self.components[component_index]
                 .cut_nodes
                 .push(cut_node_index);
+
+            for block_index in blocks.iter().copied() {
+                debug_assert!(!self.blocks[block_index].cut_nodes.contains(&cut_node_index));
+                self.blocks[block_index].cut_nodes.push(cut_node_index);
+            }
 
             CutNode {
                 component: component_index,
@@ -206,6 +212,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
                 nodes,
                 edges: Vec::new(),
                 spqr_node_type,
+                spqr_edges: SmallVec::new(),
             }
         })
     }
@@ -275,6 +282,11 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
                     .contains(&endpoints.1)
             );
 
+            assert!(!self.spqr_nodes[endpoints.0].spqr_edges.contains(&index));
+            assert!(!self.spqr_nodes[endpoints.1].spqr_edges.contains(&index));
+            self.spqr_nodes[endpoints.0].spqr_edges.push(index);
+            self.spqr_nodes[endpoints.1].spqr_edges.push(index);
+
             SPQREdge {
                 endpoints,
                 virtual_edge,
@@ -325,13 +337,20 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
 
             // Nodes in multiple blocks are cut nodes.
             if block_indices.len() >= 2 {
-                let block_indices = block_indices.iter().copied().collect();
+                let block_indices: SmallVec<_> = block_indices.iter().copied().collect();
                 let component_index = self.node_data[node_index].component_index.unwrap();
 
                 self.cut_nodes.push_in_place(|cut_node_index| {
                     self.components[component_index]
                         .cut_nodes
                         .push(cut_node_index);
+
+                    for block_index in block_indices.iter().copied() {
+                        debug_assert!(
+                            !self.blocks[block_index].cut_nodes.contains(&cut_node_index),
+                        );
+                        self.blocks[block_index].cut_nodes.push(cut_node_index);
+                    }
 
                     assert!(self.node_data[node_index].cut_node_index.is_none());
                     self.node_data[node_index].cut_node_index = Some(cut_node_index).into();
