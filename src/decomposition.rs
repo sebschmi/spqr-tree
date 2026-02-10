@@ -176,6 +176,10 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
         self.node_data[node_index].cut_node_index.is_some()
     }
 
+    pub fn spqr_edge(&self, spqr_edge_index: SPQREdgeIndex<Graph::IndexType>) -> &SPQREdge<Graph> {
+        &self.spqr_edges[spqr_edge_index]
+    }
+
     /// Returns true if the given node has an incident virtual edge.
     ///
     /// This also means that the node is part of at least two SPQR nodes.
