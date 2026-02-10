@@ -256,6 +256,16 @@ impl<Graph: StaticGraph> SPQREdge<Graph> {
         self.endpoints
     }
 
+    /// Returns the endpoint with the smaller index.
+    pub fn min_endpoint(&self) -> SPQRNodeIndex<Graph::IndexType> {
+        self.endpoints.0.min(self.endpoints.1)
+    }
+
+    /// Returns the endpoint with the larger index.
+    pub fn max_endpoint(&self) -> SPQRNodeIndex<Graph::IndexType> {
+        self.endpoints.0.max(self.endpoints.1)
+    }
+
     pub fn virtual_edge(&self) -> (Graph::NodeIndex, Graph::NodeIndex) {
         self.virtual_edge
     }
