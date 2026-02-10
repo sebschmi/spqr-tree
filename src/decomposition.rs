@@ -231,6 +231,14 @@ impl<Graph: StaticGraph> SPQRNode<Graph> {
         self.nodes.iter().copied()
     }
 
+    pub fn p_node_poles(&self) -> Option<(Graph::NodeIndex, Graph::NodeIndex)> {
+        if self.spqr_node_type == SPQRNodeType::PNode {
+            Some((self.nodes[0], self.nodes[1]))
+        } else {
+            None
+        }
+    }
+
     pub fn iter_edges(&self) -> impl Iterator<Item = Graph::EdgeIndex> {
         self.edges.iter().copied()
     }
@@ -268,5 +276,10 @@ impl<Graph: StaticGraph> SPQREdge<Graph> {
 
     pub fn virtual_edge(&self) -> (Graph::NodeIndex, Graph::NodeIndex) {
         self.virtual_edge
+    }
+
+    pub fn ordered_virtual_edge(&self) -> (Graph::NodeIndex, Graph::NodeIndex) {
+        let (u, v) = self.virtual_edge();
+        if u < v { (u, v) } else { (v, u) }
     }
 }
