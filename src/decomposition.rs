@@ -21,42 +21,42 @@ pub mod indices;
 /// The decomposition of a connected component into its biconnected components is called the [block cut tree](https://en.wikipedia.org/wiki/Biconnected_component#Block-cut_tree).
 /// The decomposition of a biconnected component into its triconnected components is called the [SPQR tree](https://en.wikipedia.org/wiki/SPQR_tree).
 pub struct SPQRDecomposition<'graph, Graph: StaticGraph> {
-    graph: &'graph Graph,
-    components: TaggedVec<ComponentIndex<Graph::IndexType>, Component<Graph>>,
-    blocks: TaggedVec<BlockIndex<Graph::IndexType>, Block<Graph>>,
-    cut_nodes: TaggedVec<CutNodeIndex<Graph::IndexType>, CutNode<Graph>>,
-    spqr_nodes: TaggedVec<SPQRNodeIndex<Graph::IndexType>, SPQRNode<Graph>>,
-    spqr_edges: TaggedVec<SPQREdgeIndex<Graph::IndexType>, SPQREdge<Graph>>,
-    node_data: TaggedVec<Graph::NodeIndex, SPQRDecompositionNodeData<Graph>>,
-    edge_data: TaggedVec<Graph::EdgeIndex, SPQRDecompositionEdgeData<Graph>>,
+    pub(crate) graph: &'graph Graph,
+    pub(crate) components: TaggedVec<ComponentIndex<Graph::IndexType>, Component<Graph>>,
+    pub(crate) blocks: TaggedVec<BlockIndex<Graph::IndexType>, Block<Graph>>,
+    pub(crate) cut_nodes: TaggedVec<CutNodeIndex<Graph::IndexType>, CutNode<Graph>>,
+    pub(crate) spqr_nodes: TaggedVec<SPQRNodeIndex<Graph::IndexType>, SPQRNode<Graph>>,
+    pub(crate) spqr_edges: TaggedVec<SPQREdgeIndex<Graph::IndexType>, SPQREdge<Graph>>,
+    pub(crate) node_data: TaggedVec<Graph::NodeIndex, SPQRDecompositionNodeData<Graph>>,
+    pub(crate) edge_data: TaggedVec<Graph::EdgeIndex, SPQRDecompositionEdgeData<Graph>>,
 }
 
 pub struct Component<Graph: StaticGraph> {
-    nodes: Vec<Graph::NodeIndex>,
-    blocks: Vec<BlockIndex<Graph::IndexType>>,
-    cut_nodes: Vec<CutNodeIndex<Graph::IndexType>>,
+    pub(crate) nodes: Vec<Graph::NodeIndex>,
+    pub(crate) blocks: Vec<BlockIndex<Graph::IndexType>>,
+    pub(crate) cut_nodes: Vec<CutNodeIndex<Graph::IndexType>>,
 }
 
 pub struct Block<Graph: StaticGraph> {
-    component: ComponentIndex<Graph::IndexType>,
-    nodes: Vec<Graph::NodeIndex>,
-    cut_nodes: Vec<CutNodeIndex<Graph::IndexType>>,
-    spqr_nodes: Vec<SPQRNodeIndex<Graph::IndexType>>,
-    spqr_edges: Vec<SPQREdgeIndex<Graph::IndexType>>,
+    pub(crate) component: ComponentIndex<Graph::IndexType>,
+    pub(crate) nodes: Vec<Graph::NodeIndex>,
+    pub(crate) cut_nodes: Vec<CutNodeIndex<Graph::IndexType>>,
+    pub(crate) spqr_nodes: Vec<SPQRNodeIndex<Graph::IndexType>>,
+    pub(crate) spqr_edges: Vec<SPQREdgeIndex<Graph::IndexType>>,
 }
 
 pub struct CutNode<Graph: StaticGraph> {
-    component: ComponentIndex<Graph::IndexType>,
-    node: Graph::NodeIndex,
-    adjacent_blocks: SmallVec<[BlockIndex<Graph::IndexType>; 2]>,
+    pub(crate) component: ComponentIndex<Graph::IndexType>,
+    pub(crate) node: Graph::NodeIndex,
+    pub(crate) adjacent_blocks: SmallVec<[BlockIndex<Graph::IndexType>; 2]>,
 }
 
 pub struct SPQRNode<Graph: StaticGraph> {
-    block: BlockIndex<Graph::IndexType>,
-    nodes: Vec<Graph::NodeIndex>,
-    edges: Vec<Graph::EdgeIndex>,
-    spqr_node_type: SPQRNodeType,
-    spqr_edges: SmallVec<[SPQREdgeIndex<Graph::IndexType>; 2]>,
+    pub(crate) block: BlockIndex<Graph::IndexType>,
+    pub(crate) nodes: Vec<Graph::NodeIndex>,
+    pub(crate) edges: Vec<Graph::EdgeIndex>,
+    pub(crate) spqr_node_type: SPQRNodeType,
+    pub(crate) spqr_edges: SmallVec<[SPQREdgeIndex<Graph::IndexType>; 2]>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -68,27 +68,26 @@ pub enum SPQRNodeType {
 
 /// An edge in the SPQR tree connecting two SPQR nodes.
 pub struct SPQREdge<Graph: StaticGraph> {
-    endpoints: (
+    pub(crate) endpoints: (
         SPQRNodeIndex<Graph::IndexType>,
         SPQRNodeIndex<Graph::IndexType>,
     ),
-    virtual_edge: (Graph::NodeIndex, Graph::NodeIndex),
+    pub(crate) virtual_edge: (Graph::NodeIndex, Graph::NodeIndex),
 }
 
-struct SPQRDecompositionNodeData<Graph: StaticGraph> {
-    component_index: ComponentIndex<Graph::IndexType>,
-    block_indices: SmallVec<[BlockIndex<Graph::IndexType>; 1]>,
-    cut_node_index: OptionalCutNodeIndex<Graph::IndexType>,
-    spqr_node_indices: SmallVec<[SPQRNodeIndex<Graph::IndexType>; 1]>,
-    extra_data: String,
+pub(crate) struct SPQRDecompositionNodeData<Graph: StaticGraph> {
+    pub(crate) component_index: ComponentIndex<Graph::IndexType>,
+    pub(crate) block_indices: SmallVec<[BlockIndex<Graph::IndexType>; 1]>,
+    pub(crate) cut_node_index: OptionalCutNodeIndex<Graph::IndexType>,
+    pub(crate) spqr_node_indices: SmallVec<[SPQRNodeIndex<Graph::IndexType>; 1]>,
+    pub(crate) extra_data: String,
 }
 
-#[expect(dead_code)]
-struct SPQRDecompositionEdgeData<Graph: StaticGraph> {
-    component_index: ComponentIndex<Graph::IndexType>,
-    block_index: BlockIndex<Graph::IndexType>,
-    spqr_node_index: SPQRNodeIndex<Graph::IndexType>,
-    extra_data: String,
+pub(crate) struct SPQRDecompositionEdgeData<Graph: StaticGraph> {
+    pub(crate) component_index: ComponentIndex<Graph::IndexType>,
+    pub(crate) block_index: BlockIndex<Graph::IndexType>,
+    pub(crate) spqr_node_index: SPQRNodeIndex<Graph::IndexType>,
+    pub(crate) extra_data: String,
 }
 
 impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
