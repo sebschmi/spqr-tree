@@ -5,10 +5,13 @@ use smallvec::SmallVec;
 use crate::{
     decomposition::{
         Block, Component, CutNode, SPQRDecomposition, SPQRDecompositionEdgeData,
-        SPQRDecompositionNodeData, SPQREdge, SPQRNode, SPQRNodeType,
+        SPQRDecompositionNodeData, SPQREdge, SPQRNode, SPQRNodeType, indices::GraphIndexInteger,
     },
     graph::StaticGraph,
 };
+
+#[cfg(test)]
+mod tests;
 
 impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     /// Reads a bidirected adjacency array from a platform-dependent binary format.
@@ -101,7 +104,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     }
 }
 
-impl<Graph: StaticGraph> Component<Graph> {
+impl<NodeIndex: Copy, IndexType: Copy> Component<NodeIndex, IndexType> {
     /// Reads a bidirected adjacency array from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
@@ -120,7 +123,7 @@ impl<Graph: StaticGraph> Component<Graph> {
     }
 }
 
-impl<Graph: StaticGraph> Block<Graph> {
+impl<NodeIndex: Copy, IndexType: Copy> Block<NodeIndex, IndexType> {
     /// Reads a bidirected adjacency array from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
@@ -143,7 +146,7 @@ impl<Graph: StaticGraph> Block<Graph> {
     }
 }
 
-impl<Graph: StaticGraph> CutNode<Graph> {
+impl<NodeIndex: Copy, IndexType: Copy> CutNode<NodeIndex, IndexType> {
     /// Reads a bidirected adjacency array from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
@@ -162,7 +165,7 @@ impl<Graph: StaticGraph> CutNode<Graph> {
     }
 }
 
-impl<Graph: StaticGraph> SPQRNode<Graph> {
+impl<NodeIndex: Copy, EdgeIndex: Copy, IndexType: Copy> SPQRNode<NodeIndex, EdgeIndex, IndexType> {
     /// Reads a bidirected adjacency array from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
@@ -210,7 +213,7 @@ impl SPQRNodeType {
     }
 }
 
-impl<Graph: StaticGraph> SPQREdge<Graph> {
+impl<NodeIndex: Copy, IndexType: Copy> SPQREdge<NodeIndex, IndexType> {
     /// Reads a bidirected adjacency array from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
@@ -227,7 +230,7 @@ impl<Graph: StaticGraph> SPQREdge<Graph> {
     }
 }
 
-impl<Graph: StaticGraph> SPQRDecompositionNodeData<Graph> {
+impl<IndexType: GraphIndexInteger> SPQRDecompositionNodeData<IndexType> {
     /// Reads a bidirected adjacency array from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
@@ -250,7 +253,7 @@ impl<Graph: StaticGraph> SPQRDecompositionNodeData<Graph> {
     }
 }
 
-impl<Graph: StaticGraph> SPQRDecompositionEdgeData<Graph> {
+impl<IndexType: Copy> SPQRDecompositionEdgeData<IndexType> {
     /// Reads a bidirected adjacency array from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {

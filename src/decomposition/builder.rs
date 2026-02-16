@@ -17,11 +17,17 @@ use crate::{
 
 pub struct SPQRDecompositionBuilder<'graph, Graph: StaticGraph> {
     graph: &'graph Graph,
-    components: TaggedVec<ComponentIndex<Graph::IndexType>, Component<Graph>>,
-    blocks: TaggedVec<BlockIndex<Graph::IndexType>, Block<Graph>>,
-    cut_nodes: TaggedVec<CutNodeIndex<Graph::IndexType>, CutNode<Graph>>,
-    spqr_nodes: TaggedVec<SPQRNodeIndex<Graph::IndexType>, SPQRNode<Graph>>,
-    spqr_edges: TaggedVec<SPQREdgeIndex<Graph::IndexType>, SPQREdge<Graph>>,
+    components:
+        TaggedVec<ComponentIndex<Graph::IndexType>, Component<Graph::NodeIndex, Graph::IndexType>>,
+    blocks: TaggedVec<BlockIndex<Graph::IndexType>, Block<Graph::NodeIndex, Graph::IndexType>>,
+    cut_nodes:
+        TaggedVec<CutNodeIndex<Graph::IndexType>, CutNode<Graph::NodeIndex, Graph::IndexType>>,
+    spqr_nodes: TaggedVec<
+        SPQRNodeIndex<Graph::IndexType>,
+        SPQRNode<Graph::NodeIndex, Graph::EdgeIndex, Graph::IndexType>,
+    >,
+    spqr_edges:
+        TaggedVec<SPQREdgeIndex<Graph::IndexType>, SPQREdge<Graph::NodeIndex, Graph::IndexType>>,
     node_data: TaggedVec<Graph::NodeIndex, SPQRDecompositionNodeDataBuilder<Graph>>,
     edge_data: TaggedVec<Graph::EdgeIndex, SPQRDecompositionEdgeDataBuilder<Graph>>,
 }
@@ -394,7 +400,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
 }
 
 impl<Graph: StaticGraph> SPQRDecompositionNodeDataBuilder<Graph> {
-    fn build(self) -> SPQRDecompositionNodeData<Graph> {
+    fn build(self) -> SPQRDecompositionNodeData<Graph::IndexType> {
         SPQRDecompositionNodeData {
             component_index: self.component_index.unwrap(),
             block_indices: self.block_indices,
@@ -406,7 +412,7 @@ impl<Graph: StaticGraph> SPQRDecompositionNodeDataBuilder<Graph> {
 }
 
 impl<Graph: StaticGraph> SPQRDecompositionEdgeDataBuilder<Graph> {
-    fn build(self) -> SPQRDecompositionEdgeData<Graph> {
+    fn build(self) -> SPQRDecompositionEdgeData<Graph::IndexType> {
         SPQRDecompositionEdgeData {
             component_index: self.component_index.unwrap(),
             block_index: self.block_index.unwrap(),
