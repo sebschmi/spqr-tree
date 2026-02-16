@@ -75,7 +75,6 @@ pub struct SPQREdge<Graph: StaticGraph> {
     virtual_edge: (Graph::NodeIndex, Graph::NodeIndex),
 }
 
-#[expect(dead_code)]
 struct SPQRDecompositionNodeData<Graph: StaticGraph> {
     component_index: ComponentIndex<Graph::IndexType>,
     block_indices: SmallVec<[BlockIndex<Graph::IndexType>; 1]>,
@@ -158,6 +157,27 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
             SPQRNodeType::PNode => format!("P{spqr_node_index}"),
             SPQRNodeType::RNode => format!("R{spqr_node_index}"),
         }
+    }
+
+    pub fn node_component_index(
+        &self,
+        node_index: Graph::NodeIndex,
+    ) -> ComponentIndex<Graph::IndexType> {
+        self.node_data[node_index].component_index
+    }
+
+    pub fn node_block_indices(
+        &self,
+        node_index: Graph::NodeIndex,
+    ) -> impl Iterator<Item = BlockIndex<Graph::IndexType>> {
+        self.node_data[node_index].block_indices.iter().copied()
+    }
+
+    pub fn node_spqr_node_indices(
+        &self,
+        node_index: Graph::NodeIndex,
+    ) -> impl Iterator<Item = SPQRNodeIndex<Graph::IndexType>> {
+        self.node_data[node_index].spqr_node_indices.iter().copied()
     }
 
     pub fn cut_node_index_to_node_index(
