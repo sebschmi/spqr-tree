@@ -109,6 +109,18 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
         self.graph
     }
 
+    pub fn component_count(&self) -> usize {
+        self.components.len()
+    }
+
+    pub fn block_count(&self) -> usize {
+        self.blocks.len()
+    }
+
+    pub fn spqr_node_count(&self) -> usize {
+        self.spqr_nodes.len()
+    }
+
     pub fn iter_component_indices(&self) -> impl Iterator<Item = ComponentIndex<Graph::IndexType>> {
         self.components.iter_indices()
     }
@@ -248,6 +260,10 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
 }
 
 impl<NodeIndex: Copy, IndexType: Copy> Component<NodeIndex, IndexType> {
+    pub fn node_count(&self) -> usize {
+        self.nodes.len()
+    }
+
     pub fn iter_nodes(&self) -> impl Iterator<Item = NodeIndex> {
         self.nodes.iter().copied()
     }
@@ -258,6 +274,10 @@ impl<NodeIndex: Copy, IndexType: Copy> Component<NodeIndex, IndexType> {
 }
 
 impl<NodeIndex: Copy, IndexType: Copy> Block<NodeIndex, IndexType> {
+    pub fn node_count(&self) -> usize {
+        self.nodes.len()
+    }
+
     pub fn iter_nodes(&self) -> impl Iterator<Item = NodeIndex> {
         self.nodes.iter().copied()
     }
@@ -282,6 +302,10 @@ impl<NodeIndex: Copy, IndexType: Copy> CutNode<NodeIndex, IndexType> {
 }
 
 impl<NodeIndex: Copy, EdgeIndex: Copy, IndexType: Copy> SPQRNode<NodeIndex, EdgeIndex, IndexType> {
+    pub fn node_count(&self) -> usize {
+        self.nodes.len()
+    }
+
     pub fn block(&self) -> BlockIndex<IndexType> {
         self.block
     }
