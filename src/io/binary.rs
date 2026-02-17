@@ -105,7 +105,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
 }
 
 impl<NodeIndex: Copy, IndexType: Copy> Component<NodeIndex, IndexType> {
-    /// Reads a bidirected adjacency array from a platform-dependent binary format.
+    /// Reads from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
             nodes: read_vec_binary(&mut reader)?,
@@ -114,7 +114,7 @@ impl<NodeIndex: Copy, IndexType: Copy> Component<NodeIndex, IndexType> {
         })
     }
 
-    /// Writes the bidirected adjacency array into a platform-dependent binary format.
+    /// Writes into a platform-dependent binary format.
     pub fn write_binary(&self, mut writer: impl std::io::Write) -> std::io::Result<()> {
         write_slice_binary(&self.nodes, &mut writer)?;
         write_slice_binary(&self.blocks, &mut writer)?;
@@ -124,7 +124,7 @@ impl<NodeIndex: Copy, IndexType: Copy> Component<NodeIndex, IndexType> {
 }
 
 impl<NodeIndex: Copy, IndexType: Copy> Block<NodeIndex, IndexType> {
-    /// Reads a bidirected adjacency array from a platform-dependent binary format.
+    /// Reads from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
             component: read_binary(&mut reader)?,
@@ -135,7 +135,7 @@ impl<NodeIndex: Copy, IndexType: Copy> Block<NodeIndex, IndexType> {
         })
     }
 
-    /// Writes the bidirected adjacency array into a platform-dependent binary format.
+    /// Writes into a platform-dependent binary format.
     pub fn write_binary(&self, mut writer: impl std::io::Write) -> std::io::Result<()> {
         write_binary(&self.component, &mut writer)?;
         write_slice_binary(&self.nodes, &mut writer)?;
@@ -147,7 +147,7 @@ impl<NodeIndex: Copy, IndexType: Copy> Block<NodeIndex, IndexType> {
 }
 
 impl<NodeIndex: Copy, IndexType: Copy> CutNode<NodeIndex, IndexType> {
-    /// Reads a bidirected adjacency array from a platform-dependent binary format.
+    /// Reads from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
             component: read_binary(&mut reader)?,
@@ -156,7 +156,7 @@ impl<NodeIndex: Copy, IndexType: Copy> CutNode<NodeIndex, IndexType> {
         })
     }
 
-    /// Writes the bidirected adjacency array into a platform-dependent binary format.
+    /// Writes into a platform-dependent binary format.
     pub fn write_binary(&self, mut writer: impl std::io::Write) -> std::io::Result<()> {
         write_binary(&self.component, &mut writer)?;
         write_binary(&self.node, &mut writer)?;
@@ -166,7 +166,7 @@ impl<NodeIndex: Copy, IndexType: Copy> CutNode<NodeIndex, IndexType> {
 }
 
 impl<NodeIndex: Copy, EdgeIndex: Copy, IndexType: Copy> SPQRNode<NodeIndex, EdgeIndex, IndexType> {
-    /// Reads a bidirected adjacency array from a platform-dependent binary format.
+    /// Reads from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
             block: read_binary(&mut reader)?,
@@ -177,7 +177,7 @@ impl<NodeIndex: Copy, EdgeIndex: Copy, IndexType: Copy> SPQRNode<NodeIndex, Edge
         })
     }
 
-    /// Writes the bidirected adjacency array into a platform-dependent binary format.
+    /// Writes into a platform-dependent binary format.
     pub fn write_binary(&self, mut writer: impl std::io::Write) -> std::io::Result<()> {
         write_binary(&self.block, &mut writer)?;
         write_slice_binary(&self.nodes, &mut writer)?;
@@ -189,7 +189,7 @@ impl<NodeIndex: Copy, EdgeIndex: Copy, IndexType: Copy> SPQRNode<NodeIndex, Edge
 }
 
 impl SPQRNodeType {
-    /// Reads a bidirected adjacency array from a platform-dependent binary format.
+    /// Reads from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         let mut byte = [0u8; 1];
         reader.read_exact(&mut byte)?;
@@ -201,7 +201,7 @@ impl SPQRNodeType {
         }
     }
 
-    /// Writes the bidirected adjacency array into a platform-dependent binary format.
+    /// Writes into a platform-dependent binary format.
     pub fn write_binary(&self, mut writer: impl std::io::Write) -> std::io::Result<()> {
         let byte = match self {
             Self::SNode => 0u8,
@@ -214,7 +214,7 @@ impl SPQRNodeType {
 }
 
 impl<NodeIndex: Copy, IndexType: Copy> SPQREdge<NodeIndex, IndexType> {
-    /// Reads a bidirected adjacency array from a platform-dependent binary format.
+    /// Reads from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
             endpoints: read_binary(&mut reader)?,
@@ -222,7 +222,7 @@ impl<NodeIndex: Copy, IndexType: Copy> SPQREdge<NodeIndex, IndexType> {
         })
     }
 
-    /// Writes the bidirected adjacency array into a platform-dependent binary format.
+    /// Writes into a platform-dependent binary format.
     pub fn write_binary(&self, mut writer: impl std::io::Write) -> std::io::Result<()> {
         write_binary(&self.endpoints, &mut writer)?;
         write_binary(&self.virtual_edge, &mut writer)?;
@@ -231,7 +231,7 @@ impl<NodeIndex: Copy, IndexType: Copy> SPQREdge<NodeIndex, IndexType> {
 }
 
 impl<IndexType: GraphIndexInteger> SPQRDecompositionNodeData<IndexType> {
-    /// Reads a bidirected adjacency array from a platform-dependent binary format.
+    /// Reads from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
             component_index: read_binary(&mut reader)?,
@@ -242,7 +242,7 @@ impl<IndexType: GraphIndexInteger> SPQRDecompositionNodeData<IndexType> {
         })
     }
 
-    /// Writes the bidirected adjacency array into a platform-dependent binary format.
+    /// Writes into a platform-dependent binary format.
     pub fn write_binary(&self, mut writer: impl std::io::Write) -> std::io::Result<()> {
         write_binary(&self.component_index, &mut writer)?;
         write_slice_binary(&self.block_indices, &mut writer)?;
@@ -254,7 +254,7 @@ impl<IndexType: GraphIndexInteger> SPQRDecompositionNodeData<IndexType> {
 }
 
 impl<IndexType: Copy> SPQRDecompositionEdgeData<IndexType> {
-    /// Reads a bidirected adjacency array from a platform-dependent binary format.
+    /// Reads from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
             component_index: read_binary(&mut reader)?,
@@ -264,7 +264,7 @@ impl<IndexType: Copy> SPQRDecompositionEdgeData<IndexType> {
         })
     }
 
-    /// Writes the bidirected adjacency array into a platform-dependent binary format.
+    /// Writes into a platform-dependent binary format.
     pub fn write_binary(&self, mut writer: impl std::io::Write) -> std::io::Result<()> {
         write_binary(&self.component_index, &mut writer)?;
         write_binary(&self.block_index, &mut writer)?;
