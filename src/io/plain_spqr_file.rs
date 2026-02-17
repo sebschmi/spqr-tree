@@ -2,7 +2,7 @@
 
 use std::{
     collections::HashMap,
-    io::{BufReader, Read, Write},
+    io::{BufRead, Write},
 };
 
 use crate::{
@@ -20,10 +20,8 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     /// Read an SPQR decomposition in the plain SPQR file format.
     pub fn read_plain_spqr(
         graph: &'graph Graph,
-        reader: &mut impl Read,
+        mut reader: impl BufRead,
     ) -> Result<Self, ReadError> {
-        let mut reader = BufReader::new(reader);
-
         // Parse header.
         let header = read_next_line(&mut reader)?.ok_or(ReadError::MissingHeader)?;
         if header[0].as_str() != "H" {
@@ -242,7 +240,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     }
 
     /// Write an SPQR decomposition in plain SPQR file format.
-    pub fn write_plain_spqr(&self, writer: &mut impl Write) -> std::io::Result<()> {
+    pub fn write_plain_spqr(&self, mut writer: impl Write) -> std::io::Result<()> {
         writeln!(
             writer,
             "H v0.1 https://github.com/sebschmi/SPQR-tree-file-format"
