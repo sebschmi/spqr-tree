@@ -136,6 +136,28 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
         self.components.iter()
     }
 
+    pub fn iter_blocks(
+        &self,
+    ) -> impl Iterator<
+        Item = (
+            BlockIndex<Graph::IndexType>,
+            &Block<Graph::NodeIndex, Graph::IndexType>,
+        ),
+    > {
+        self.blocks.iter()
+    }
+
+    pub fn iter_spqr_nodes(
+        &self,
+    ) -> impl Iterator<
+        Item = (
+            SPQRNodeIndex<Graph::IndexType>,
+            &SPQRNode<Graph::NodeIndex, Graph::EdgeIndex, Graph::IndexType>,
+        ),
+    > {
+        self.spqr_nodes.iter()
+    }
+
     pub fn iter_blocks_in_component(
         &self,
         component_index: ComponentIndex<Graph::IndexType>,
