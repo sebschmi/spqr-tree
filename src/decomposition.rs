@@ -22,6 +22,7 @@ pub mod indices;
 ///
 /// The decomposition of a connected component into its biconnected components is called the [block cut tree](https://en.wikipedia.org/wiki/Biconnected_component#Block-cut_tree).
 /// The decomposition of a biconnected component into its triconnected components is called the [SPQR tree](https://en.wikipedia.org/wiki/SPQR_tree).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SPQRDecomposition<'graph, Graph: StaticGraph> {
     pub(crate) graph: &'graph Graph,
     pub(crate) components:
@@ -40,14 +41,14 @@ pub struct SPQRDecomposition<'graph, Graph: StaticGraph> {
     pub(crate) edge_data: TaggedVec<Graph::EdgeIndex, SPQRDecompositionEdgeData<Graph::IndexType>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Component<NodeIndex, IndexType> {
     pub(crate) nodes: Vec<NodeIndex>,
     pub(crate) blocks: Vec<BlockIndex<IndexType>>,
     pub(crate) cut_nodes: Vec<CutNodeIndex<IndexType>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Block<NodeIndex, IndexType> {
     pub(crate) component: ComponentIndex<IndexType>,
     pub(crate) nodes: Vec<NodeIndex>,
@@ -56,14 +57,14 @@ pub struct Block<NodeIndex, IndexType> {
     pub(crate) spqr_edges: Vec<SPQREdgeIndex<IndexType>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CutNode<NodeIndex, IndexType> {
     pub(crate) component: ComponentIndex<IndexType>,
     pub(crate) node: NodeIndex,
     pub(crate) adjacent_blocks: SmallVec<[BlockIndex<IndexType>; 2]>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SPQRNode<NodeIndex, EdgeIndex, IndexType> {
     pub(crate) block: BlockIndex<IndexType>,
     pub(crate) nodes: Vec<NodeIndex>,
@@ -72,7 +73,7 @@ pub struct SPQRNode<NodeIndex, EdgeIndex, IndexType> {
     pub(crate) spqr_edges: SmallVec<[SPQREdgeIndex<IndexType>; 2]>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SPQRNodeType {
     SNode,
     PNode,
@@ -80,13 +81,13 @@ pub enum SPQRNodeType {
 }
 
 /// An edge in the SPQR tree connecting two SPQR nodes.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SPQREdge<NodeIndex, IndexType> {
     pub(crate) endpoints: (SPQRNodeIndex<IndexType>, SPQRNodeIndex<IndexType>),
     pub(crate) virtual_edge: (NodeIndex, NodeIndex),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(crate) struct SPQRDecompositionNodeData<IndexType: GraphIndexInteger> {
     pub(crate) component_index: ComponentIndex<IndexType>,
     pub(crate) block_indices: SmallVec<[BlockIndex<IndexType>; 1]>,
@@ -95,7 +96,7 @@ pub(crate) struct SPQRDecompositionNodeData<IndexType: GraphIndexInteger> {
     pub(crate) extra_data: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(crate) struct SPQRDecompositionEdgeData<IndexType> {
     pub(crate) component_index: ComponentIndex<IndexType>,
     pub(crate) block_index: BlockIndex<IndexType>,
