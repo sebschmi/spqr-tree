@@ -3,7 +3,7 @@ use std::fs::{self, File};
 use bidirected_adjacency_array::io::gfa1::read_gfa1;
 use regex::Regex;
 
-use crate::io::plain_spqr_file::{read_plain_spqr, write_plain_spqr};
+use crate::decomposition::SPQRDecomposition;
 
 #[test]
 fn test_tiny1() {
@@ -12,10 +12,11 @@ fn test_tiny1() {
     let graph = read_gfa1::<u8>(&mut File::open("test_files/tiny1.gfa").unwrap()).unwrap();
     let spqr_decomposition_file = fs::read_to_string("test_files/tiny1.spqr").unwrap();
     let spqr_decomposition =
-        read_plain_spqr(&graph, &mut spqr_decomposition_file.as_bytes()).unwrap();
+        SPQRDecomposition::read_plain_spqr(&graph, &mut spqr_decomposition_file.as_bytes())
+            .unwrap();
 
     let mut buffer = Vec::new();
-    write_plain_spqr(&spqr_decomposition, &mut buffer).unwrap();
+    spqr_decomposition.write_plain_spqr(&mut buffer).unwrap();
 
     let spqr_decomposition_file = remove_edge_labels.replace_all(&spqr_decomposition_file, " E ");
     let mut spqr_decomposition_file_sorted = spqr_decomposition_file

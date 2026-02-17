@@ -2,14 +2,15 @@ use std::fs::{self, File};
 
 use bidirected_adjacency_array::io::gfa1::read_gfa1;
 
-use crate::{decomposition::SPQRDecomposition, io::plain_spqr_file::read_plain_spqr};
+use crate::decomposition::SPQRDecomposition;
 
 #[test]
 fn test_tiny1() {
     let graph = read_gfa1::<u8>(&mut File::open("test_files/tiny1.gfa").unwrap()).unwrap();
     let spqr_decomposition_file = fs::read_to_string("test_files/tiny1.spqr").unwrap();
     let spqr_decomposition =
-        read_plain_spqr(&graph, &mut spqr_decomposition_file.as_bytes()).unwrap();
+        SPQRDecomposition::read_plain_spqr(&graph, &mut spqr_decomposition_file.as_bytes())
+            .unwrap();
 
     let mut buffer = Vec::new();
     spqr_decomposition.write_binary(&mut buffer).unwrap();
