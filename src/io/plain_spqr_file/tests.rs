@@ -49,7 +49,6 @@ fn test_tiny1() {
     assert_eq!(spqr_decomposition_file_sorted, buffer_sorted);
 }
 
-
 #[test]
 fn test_random1_1_false_0() {
     let remove_edge_labels = Regex::new(r" E\d+ ").unwrap();

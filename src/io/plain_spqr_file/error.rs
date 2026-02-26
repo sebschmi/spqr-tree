@@ -1,7 +1,12 @@
+use crate::io::plain_spqr_file::line_reader::LineReaderError;
+
 #[derive(thiserror::Error, Debug)]
 pub enum ReadError {
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
+
+    #[error("Line reader error: {0}")]
+    Line(#[from] LineReaderError),
 
     #[error("invalid line type: {0}. Expected one of G, N, B, C, S, P, R, V, E")]
     InvalidLineType(String),
