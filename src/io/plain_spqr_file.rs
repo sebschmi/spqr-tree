@@ -48,6 +48,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
         while let Some(line) = line_reader.next()? {
             match &line[0] {
                 "G" => {
+                    trace!("Parsing G-line");
                     let component_name = line
                         .column(1)
                         .ok_or(ReadError::MissingComponentNameInGLine)?;
