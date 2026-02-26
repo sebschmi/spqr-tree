@@ -122,7 +122,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     }
 
     pub fn iter_component_indices(&self) -> impl Iterator<Item = ComponentIndex<Graph::IndexType>> {
-        self.components.iter_indices()
+        self.components.iter_indices(..)
     }
 
     pub fn iter_components(
@@ -133,7 +133,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
             &Component<Graph::NodeIndex, Graph::IndexType>,
         ),
     > {
-        self.components.iter()
+        self.components.iter(..)
     }
 
     pub fn iter_blocks(
@@ -144,7 +144,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
             &Block<Graph::NodeIndex, Graph::IndexType>,
         ),
     > {
-        self.blocks.iter()
+        self.blocks.iter(..)
     }
 
     pub fn iter_spqr_nodes(
@@ -155,7 +155,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
             &SPQRNode<Graph::NodeIndex, Graph::EdgeIndex, Graph::IndexType>,
         ),
     > {
-        self.spqr_nodes.iter()
+        self.spqr_nodes.iter(..)
     }
 
     pub fn iter_blocks_in_component(

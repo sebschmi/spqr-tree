@@ -75,6 +75,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                     name_to_component_index.insert(component_name.to_string(), component_index);
                 }
                 "N" => {
+                    trace!("Parsing N-line");
                     let node_name = line.column(1).ok_or(ReadError::MissingNodeNameInNLine)?;
                     let extra_data = line.iter().skip(2).collect::<Vec<_>>();
                     let extra_data = extra_data.join(" ");
@@ -85,6 +86,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                     builder.add_extra_data_to_node(node_index, extra_data);
                 }
                 "B" => {
+                    trace!("Parsing B-line");
                     let block_name = line.column(1).ok_or(ReadError::MissingBlockNameInBLine)?;
                     let component_name = line
                         .column(2)
@@ -112,6 +114,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                     name_to_block_index.insert(block_name.to_string(), block_index);
                 }
                 "C" => {
+                    trace!("Parsing C-line");
                     let cut_node_name = line.column(1).ok_or(ReadError::MissingNodeNameInCLine)?;
                     let cut_node_index = name_to_node_index
                         .get(cut_node_name)
@@ -135,9 +138,18 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                 }
                 "S" | "P" | "R" => {
                     let spqr_node_type = match &line[0] {
-                        "S" => SPQRNodeType::SNode,
-                        "P" => SPQRNodeType::PNode,
-                        "R" => SPQRNodeType::RNode,
+                        "S" => {
+                            trace!("Parsing S-line");
+                            SPQRNodeType::SNode
+                        }
+                        "P" => {
+                            trace!("Parsing P-line");
+                            SPQRNodeType::PNode
+                        }
+                        "R" => {
+                            trace!("Parsing R-line");
+                            SPQRNodeType::RNode
+                        }
                         _ => unreachable!(),
                     };
                     let spqr_node_name = line
@@ -166,6 +178,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                     name_to_spqr_node_index.insert(spqr_node_name.to_string(), spqr_node_index);
                 }
                 "V" => {
+                    trace!("Parsing V-line");
                     let spqr_edge_name = line
                         .column(1)
                         .ok_or(ReadError::MissingSPQREdgeNameInVLine)?;
@@ -211,6 +224,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                     name_to_spqr_edge_index.insert(spqr_edge_name.to_string(), spqr_edge_index);
                 }
                 "E" => {
+                    trace!("Parsing E-line");
                     let _edge_name = line.column(1).ok_or(ReadError::MissingEdgeNameInELine)?;
                     let spqr_node_name = line
                         .column(2)

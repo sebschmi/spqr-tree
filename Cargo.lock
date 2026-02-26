@@ -19,9 +19,9 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "bidirected-adjacency-array"
-version = "0.3.1"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60757a2c356e2d43cf60bf343556605541fa01203fef9efea7e8a32e74322fef"
+checksum = "97999acb10b3e502feedef8a99c41a07a0a5e1788787fb4a99fcacf0875989b4"
 dependencies = [
  "bitvec",
  "log",
@@ -188,9 +188,9 @@ dependencies = [
 
 [[package]]
 name = "tagged-vec"
-version = "0.4.6"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db47523a9a9b1d1430f3a78c7700817ab6f80e5296c94e1e9da3f90715358746"
+checksum = "22fe9493b5b9694af2202b6c55b220ef8b11d616bd84809a69102797bc0615d8"
 
 [[package]]
 name = "tap"
