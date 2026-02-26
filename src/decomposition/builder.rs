@@ -1,7 +1,4 @@
-use std::{
-    iter,
-    time::{Duration, Instant},
-};
+use std::iter;
 
 use log::{debug, trace};
 use smallvec::SmallVec;
@@ -91,25 +88,19 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
         assert!(!nodes.is_empty());
 
         self.components.push_in_place(|index| {
-            let start_time = Instant::now();
-            let mut edge_iteration_duration = Duration::ZERO;
-
             for node in nodes.iter().copied() {
                 assert!(self.node_data[node].component_index.is_none());
                 self.node_data[node].component_index = index.into();
 
-                let start_time = Instant::now();
                 for edge in self.graph.incident_edges(node) {
                     if self.edge_data[edge].component_index != Some(index).into() {
                         assert!(self.edge_data[edge].component_index.is_none());
                         self.edge_data[edge].component_index = index.into();
                     }
                 }
-                edge_iteration_duration += start_time.elapsed();
             }
-            let duration = start_time.elapsed();
 
-            trace!("Component added with index {index} in {duration:?} (edge iteration took {edge_iteration_duration:?})");
+            trace!("Component added with index {index}");
             Component {
                 nodes,
                 blocks: Vec::new(),
