@@ -315,7 +315,13 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
 
             debug_assert!(component_index.is_some());
             debug_assert!(!block_indices.is_empty());
-            debug_assert!(!spqr_node_indices.is_empty());
+            // Blocks containing a single node cannot contain SPQR nodes.
+            debug_assert!(
+                !spqr_node_indices.is_empty()
+                    || block_indices
+                        .iter()
+                        .all(|block_index| self.blocks[*block_index].node_count() == 1)
+            );
         }
 
         // Ensure that all edges have actually been assigned to components, blocks, and SPQR nodes.
@@ -329,7 +335,10 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
 
             debug_assert!(component_index.is_some());
             debug_assert!(block_index.is_some());
-            debug_assert!(spqr_node_index.is_some());
+            // Blocks containing a single node cannot contain SPQR nodes.
+            debug_assert!(
+                spqr_node_index.is_some() || self.blocks[block_index.unwrap()].node_count() == 1
+            );
         }
 
         // Identify cut nodes.
@@ -416,7 +425,7 @@ impl<Graph: StaticGraph> SPQRDecompositionEdgeDataBuilder<Graph> {
         SPQRDecompositionEdgeData {
             component_index: self.component_index.unwrap(),
             block_index: self.block_index.unwrap(),
-            spqr_node_index: self.spqr_node_index.unwrap(),
+            spqr_node_index: self.spqr_node_index,
             extra_data: self.extra_data,
         }
     }

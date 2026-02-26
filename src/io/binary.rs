@@ -253,7 +253,7 @@ impl<IndexType: GraphIndexInteger> SPQRDecompositionNodeData<IndexType> {
     }
 }
 
-impl<IndexType: Copy> SPQRDecompositionEdgeData<IndexType> {
+impl<IndexType: GraphIndexInteger> SPQRDecompositionEdgeData<IndexType> {
     /// Reads from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
