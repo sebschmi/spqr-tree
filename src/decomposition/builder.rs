@@ -1,5 +1,6 @@
 use std::iter;
 
+use log::debug;
 use smallvec::SmallVec;
 use tagged_vec::TaggedVec;
 
@@ -304,6 +305,8 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
     ///
     /// This method performs some sanity checks and identifies remaining cut nodes.
     pub fn build(mut self) -> SPQRDecomposition<'graph, Graph> {
+        debug!("Finalizing SPQR decomposition...");
+
         // Ensure that all nodes have actually been assigned to components, blocks, and SPQR nodes.
         for node_index in self.graph.node_indices() {
             let SPQRDecompositionNodeDataBuilder {
@@ -379,6 +382,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
             }
         }
 
+        debug!("SPQR decomposition finalized.");
         SPQRDecomposition {
             graph: self.graph,
             components: self.components,

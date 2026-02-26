@@ -3,6 +3,7 @@
 use std::io::{BufRead, Write};
 
 use fxhash::FxHashMap;
+use log::{debug, trace};
 
 use crate::{
     decomposition::{SPQRDecomposition, SPQRNodeType, builder::SPQRDecompositionBuilder},
@@ -18,9 +19,11 @@ pub mod tests;
 impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     /// Read an SPQR decomposition in the plain SPQR file format.
     pub fn read_plain_spqr(graph: &'graph Graph, reader: impl BufRead) -> Result<Self, ReadError> {
+        debug!("Reading SPQR decomposition in plain SPQR format...");
         let mut line_reader = LineReader::new(reader);
 
         // Parse header.
+        trace!("Parsing header");
         let header = line_reader.next()?.ok_or(ReadError::MissingHeader)?;
         if &header[0] != "H" {
             return Err(ReadError::MissingHeader);
@@ -58,6 +61,10 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                                 .ok_or_else(|| ReadError::UnknownNodeName(node.to_string()))
                         })
                         .collect::<Result<Vec<_>, _>>()?;
+                    trace!(
+                        "Found component {component_name} with {} nodes",
+                        nodes.len()
+                    );
 
                     if nodes.is_empty() {
                         return Err(ReadError::EmptyComponent);
