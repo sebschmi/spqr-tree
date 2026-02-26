@@ -1,9 +1,8 @@
 //! Methods for reading and writing an SPQR decomposition in the [`.spqr` file format](https://github.com/sebschmi/SPQR-tree-file-format).
 
-use std::{
-    collections::HashMap,
-    io::{BufRead, Write},
-};
+use std::io::{BufRead, Write};
+
+use fxhash::FxHashMap;
 
 use crate::{
     decomposition::{SPQRDecomposition, SPQRNodeType, builder::SPQRDecompositionBuilder},
@@ -34,14 +33,14 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
         }
 
         let mut builder = SPQRDecompositionBuilder::new(graph);
-        let name_to_node_index: HashMap<_, _> = graph
+        let name_to_node_index: FxHashMap<_, _> = graph
             .node_indices()
             .map(|node_index| (graph.node_name(node_index).into_owned(), node_index))
             .collect();
-        let mut name_to_component_index = HashMap::new();
-        let mut name_to_block_index = HashMap::new();
-        let mut name_to_spqr_node_index = HashMap::new();
-        let mut name_to_spqr_edge_index = HashMap::new();
+        let mut name_to_component_index = FxHashMap::default();
+        let mut name_to_block_index = FxHashMap::default();
+        let mut name_to_spqr_node_index = FxHashMap::default();
+        let mut name_to_spqr_edge_index = FxHashMap::default();
 
         while let Some(line) = line_reader.next()? {
             match &line[0] {

@@ -19,6 +19,8 @@ num-traits = "0.2.19"
 thiserror = "2.0.18"
 optional-numeric-index = "0.4.0"
 bidirected-adjacency-array = { version = "0.3.1", optional = true }
+log = "0.4.29"
+fxhash = "*"
 
 [dev-dependencies]
 regex = "1.12.3"
