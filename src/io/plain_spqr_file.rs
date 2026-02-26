@@ -2,8 +2,8 @@
 
 use std::io::{BufRead, Write};
 
-use fxhash::FxHashMap;
 use log::{debug, trace};
+use rustc_hash::FxHashMap;
 
 use crate::{
     decomposition::{SPQRDecomposition, SPQRNodeType, builder::SPQRDecompositionBuilder},
