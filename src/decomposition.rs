@@ -6,7 +6,8 @@ use tagged_vec::TaggedVec;
 use crate::{
     decomposition::indices::{
         BlockIndex, ComponentIndex, CutNodeIndex, GraphIndex, GraphIndexInteger,
-        OptionalCutNodeIndex, OptionalSPQRNodeIndex, SPQREdgeIndex, SPQRNodeIndex,
+        OptionalBlockIndex, OptionalCutNodeIndex, OptionalSPQRNodeIndex, SPQREdgeIndex,
+        SPQRNodeIndex,
     },
     graph::StaticGraph,
 };
@@ -107,7 +108,7 @@ pub(crate) struct SPQRDecompositionNodeData<IndexType: GraphIndexInteger> {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(crate) struct SPQRDecompositionEdgeData<IndexType: GraphIndexInteger> {
     pub(crate) component_index: ComponentIndex<IndexType>,
-    pub(crate) block_index: BlockIndex<IndexType>,
+    pub(crate) block_index: OptionalBlockIndex<IndexType>,
     pub(crate) spqr_node_index: OptionalSPQRNodeIndex<IndexType>,
     pub(crate) extra_data: String,
 }

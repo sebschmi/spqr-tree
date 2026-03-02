@@ -366,13 +366,17 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
             } = &self.node_data[node_index];
 
             debug_assert!(component_index.is_some());
-            debug_assert!(!block_indices.is_empty());
-            // Blocks containing a single node cannot contain SPQR nodes.
+            // Components containing only one node cannot contain blocks.
+            debug_assert!(
+                !block_indices.is_empty()
+                    || self.components[component_index.unwrap()].nodes.len() == 1
+            );
+            // Blocks containing at most two nodes cannot contain SPQR nodes.
             debug_assert!(
                 !spqr_node_indices.is_empty()
                     || block_indices
                         .iter()
-                        .all(|block_index| self.blocks[*block_index].node_count() == 1)
+                        .all(|block_index| self.blocks[*block_index].node_count() <= 2)
             );
         }
 
@@ -386,10 +390,16 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
             } = &self.edge_data[edge_index];
 
             debug_assert!(component_index.is_some());
-            debug_assert!(block_index.is_some());
-            // Blocks containing a single node cannot contain SPQR nodes.
+            // Components containing only one node cannot contain blocks.
             debug_assert!(
-                spqr_node_index.is_some() || self.blocks[block_index.unwrap()].node_count() == 1
+                block_index.is_some() || self.components[component_index.unwrap()].nodes.len() == 1
+            );
+            // Blocks containing at most two nodes cannot contain SPQR nodes.
+            debug_assert!(
+                spqr_node_index.is_some()
+                    || block_index
+                        .into_iter()
+                        .all(|block_index| self.blocks[block_index].node_count() <= 2)
             );
         }
 
@@ -488,7 +498,7 @@ impl<Graph: StaticGraph> SPQRDecompositionEdgeDataBuilder<Graph> {
     fn build(self) -> SPQRDecompositionEdgeData<Graph::IndexType> {
         SPQRDecompositionEdgeData {
             component_index: self.component_index.unwrap(),
-            block_index: self.block_index.unwrap(),
+            block_index: self.block_index,
             spqr_node_index: self.spqr_node_index,
             extra_data: self.extra_data,
         }
