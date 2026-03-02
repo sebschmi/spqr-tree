@@ -232,8 +232,8 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                     let spqr_node_or_block_name = line
                         .column(2)
                         .ok_or(ReadError::MissingSPQRNodeOrBlockNameInELine)?;
-                    let node_name_u = line.column(4).ok_or(ReadError::MissingNodeNameInELine)?;
-                    let node_name_v = line.column(5).ok_or(ReadError::MissingNodeNameInELine)?;
+                    let node_name_u = line.column(3).ok_or(ReadError::MissingNodeNameInELine)?;
+                    let node_name_v = line.column(4).ok_or(ReadError::MissingNodeNameInELine)?;
 
                     let node_index_u = name_to_node_index
                         .get(node_name_u)
