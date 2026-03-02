@@ -85,14 +85,14 @@ pub enum ReadError {
     #[error("an E-line is missing the edge name")]
     MissingEdgeNameInELine,
 
-    #[error("an E-line is missing the SPQR node name")]
-    MissingSPQRNodeNameInELine,
-
-    #[error("an E-line is missing the block name")]
-    MissingBlockNameInELine,
+    #[error("an E-line is missing the SPQR node or block name")]
+    MissingSPQRNodeOrBlockNameInELine,
 
     #[error("an E-line is missing a node name")]
     MissingNodeNameInELine,
+
+    #[error("unknown SPQR node or block name: {0}")]
+    UnknownSPQRNodeOrBlockName(String),
 
     #[error("an E-line is declared between {0} and {1}, but no such edge exists in the graph")]
     NoEdgeBetweenNodes(String, String),

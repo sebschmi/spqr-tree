@@ -31,7 +31,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
         if &header[0] != "H" {
             return Err(ReadError::MissingHeader);
         }
-        if header.column(1) != Some("v0.1") {
+        if header.column(1) != Some("v0.3") {
             return Err(ReadError::UnsupportedVersion);
         }
         if header.column(2).is_none() {
@@ -229,10 +229,9 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                 "E" => {
                     trace!("Parsing E-line");
                     let _edge_name = line.column(1).ok_or(ReadError::MissingEdgeNameInELine)?;
-                    let spqr_node_name = line
+                    let spqr_node_or_block_name = line
                         .column(2)
-                        .ok_or(ReadError::MissingSPQRNodeNameInELine)?;
-                    let block_name = line.column(3).ok_or(ReadError::MissingBlockNameInELine)?;
+                        .ok_or(ReadError::MissingSPQRNodeOrBlockNameInELine)?;
                     let node_name_u = line.column(4).ok_or(ReadError::MissingNodeNameInELine)?;
                     let node_name_v = line.column(5).ok_or(ReadError::MissingNodeNameInELine)?;
 
@@ -245,14 +244,6 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                         .copied()
                         .ok_or_else(|| ReadError::UnknownNodeName(node_name_v.to_string()))?;
 
-                    let spqr_node_index =
-                        *name_to_spqr_node_index.get(spqr_node_name).ok_or_else(|| {
-                            ReadError::UnknownSPQRNodeName(spqr_node_name.to_string())
-                        })?;
-                    let _block_index = *name_to_block_index
-                        .get(block_name)
-                        .ok_or_else(|| ReadError::UnknownBlockName(block_name.to_string()))?;
-
                     let mut edges_between = graph.edges_between(node_index_u, node_index_v);
                     let Some(first) = edges_between.next() else {
                         return Err(ReadError::NoEdgeBetweenNodes(
@@ -263,11 +254,29 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                     let second = edges_between.next();
                     let is_multiedge = second.is_some();
 
-                    for edge_index in iter::once(first).chain(second).chain(edges_between) {
-                        let result = builder.add_edge_to_spqr_node(edge_index, spqr_node_index);
-                        if !is_multiedge {
-                            result?;
+                    if let Some(spqr_node_index) = name_to_spqr_node_index
+                        .get(spqr_node_or_block_name)
+                        .copied()
+                    {
+                        for edge_index in iter::once(first).chain(second).chain(edges_between) {
+                            let result = builder.add_edge_to_spqr_node(edge_index, spqr_node_index);
+                            if !is_multiedge {
+                                result?;
+                            }
                         }
+                    } else if let Some(block_index) =
+                        name_to_block_index.get(spqr_node_or_block_name).copied()
+                    {
+                        for edge_index in iter::once(first).chain(second).chain(edges_between) {
+                            let result = builder.add_edge_to_block(edge_index, block_index);
+                            if !is_multiedge {
+                                result?;
+                            }
+                        }
+                    } else {
+                        return Err(ReadError::UnknownSPQRNodeOrBlockName(
+                            spqr_node_or_block_name.to_string(),
+                        ));
                     }
                 }
                 other => {

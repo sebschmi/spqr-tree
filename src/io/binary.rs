@@ -123,13 +123,14 @@ impl<NodeIndex: Copy, IndexType: Copy> Component<NodeIndex, IndexType> {
     }
 }
 
-impl<NodeIndex: Copy, IndexType: Copy> Block<NodeIndex, IndexType> {
+impl<NodeIndex: Copy, EdgeIndex: Copy, IndexType: Copy> Block<NodeIndex, EdgeIndex, IndexType> {
     /// Reads from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
             component: read_binary(&mut reader)?,
             nodes: read_vec_binary(&mut reader)?,
             cut_nodes: read_vec_binary(&mut reader)?,
+            edges: read_vec_binary(&mut reader)?,
             spqr_nodes: read_vec_binary(&mut reader)?,
             spqr_edges: read_vec_binary(&mut reader)?,
         })
@@ -140,6 +141,7 @@ impl<NodeIndex: Copy, IndexType: Copy> Block<NodeIndex, IndexType> {
         write_binary(&self.component, &mut writer)?;
         write_slice_binary(&self.nodes, &mut writer)?;
         write_slice_binary(&self.cut_nodes, &mut writer)?;
+        write_slice_binary(&self.edges, &mut writer)?;
         write_slice_binary(&self.spqr_nodes, &mut writer)?;
         write_slice_binary(&self.spqr_edges, &mut writer)?;
         Ok(())

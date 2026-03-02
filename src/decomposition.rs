@@ -27,8 +27,10 @@ pub struct SPQRDecomposition<'graph, Graph: StaticGraph> {
     pub(crate) graph: &'graph Graph,
     pub(crate) components:
         TaggedVec<ComponentIndex<Graph::IndexType>, Component<Graph::NodeIndex, Graph::IndexType>>,
-    pub(crate) blocks:
-        TaggedVec<BlockIndex<Graph::IndexType>, Block<Graph::NodeIndex, Graph::IndexType>>,
+    pub(crate) blocks: TaggedVec<
+        BlockIndex<Graph::IndexType>,
+        Block<Graph::NodeIndex, Graph::EdgeIndex, Graph::IndexType>,
+    >,
     pub(crate) cut_nodes:
         TaggedVec<CutNodeIndex<Graph::IndexType>, CutNode<Graph::NodeIndex, Graph::IndexType>>,
     pub(crate) spqr_nodes: TaggedVec<
@@ -44,16 +46,22 @@ pub struct SPQRDecomposition<'graph, Graph: StaticGraph> {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Component<NodeIndex, IndexType> {
     pub(crate) nodes: Vec<NodeIndex>,
+    /// Only populated if the component has at least two nodes.
     pub(crate) blocks: Vec<BlockIndex<IndexType>>,
+    /// Only populated if the component has at least two nodes.
     pub(crate) cut_nodes: Vec<CutNodeIndex<IndexType>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Block<NodeIndex, IndexType> {
+pub struct Block<NodeIndex, EdgeIndex, IndexType> {
     pub(crate) component: ComponentIndex<IndexType>,
     pub(crate) nodes: Vec<NodeIndex>,
     pub(crate) cut_nodes: Vec<CutNodeIndex<IndexType>>,
+    /// Only populated if the block has less than three nodes.
+    pub(crate) edges: Vec<EdgeIndex>,
+    /// Only populated if the block has at least three nodes.
     pub(crate) spqr_nodes: Vec<SPQRNodeIndex<IndexType>>,
+    /// Only populated if the block has at least three nodes.
     pub(crate) spqr_edges: Vec<SPQREdgeIndex<IndexType>>,
 }
 
@@ -141,7 +149,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     ) -> impl Iterator<
         Item = (
             BlockIndex<Graph::IndexType>,
-            &Block<Graph::NodeIndex, Graph::IndexType>,
+            &Block<Graph::NodeIndex, Graph::EdgeIndex, Graph::IndexType>,
         ),
     > {
         self.blocks.iter(..)
@@ -164,7 +172,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     ) -> impl Iterator<
         Item = (
             BlockIndex<Graph::IndexType>,
-            &Block<Graph::NodeIndex, Graph::IndexType>,
+            &Block<Graph::NodeIndex, Graph::EdgeIndex, Graph::IndexType>,
         ),
     > {
         self.components[component_index]
@@ -299,9 +307,13 @@ impl<NodeIndex: Copy, IndexType: Copy> Component<NodeIndex, IndexType> {
     }
 }
 
-impl<NodeIndex: Copy, IndexType: Copy> Block<NodeIndex, IndexType> {
+impl<NodeIndex: Copy, EdgeIndex: Copy, IndexType: Copy> Block<NodeIndex, EdgeIndex, IndexType> {
     pub fn node_count(&self) -> usize {
         self.nodes.len()
+    }
+
+    pub fn edge_count(&self) -> usize {
+        self.edges.len()
     }
 
     pub fn spqr_node_count(&self) -> usize {

@@ -21,7 +21,10 @@ pub struct SPQRDecompositionBuilder<'graph, Graph: StaticGraph> {
     graph: &'graph Graph,
     components:
         TaggedVec<ComponentIndex<Graph::IndexType>, Component<Graph::NodeIndex, Graph::IndexType>>,
-    blocks: TaggedVec<BlockIndex<Graph::IndexType>, Block<Graph::NodeIndex, Graph::IndexType>>,
+    blocks: TaggedVec<
+        BlockIndex<Graph::IndexType>,
+        Block<Graph::NodeIndex, Graph::EdgeIndex, Graph::IndexType>,
+    >,
     cut_nodes:
         TaggedVec<CutNodeIndex<Graph::IndexType>, CutNode<Graph::NodeIndex, Graph::IndexType>>,
     spqr_nodes: TaggedVec<
@@ -162,6 +165,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
                 component,
                 nodes,
                 cut_nodes: Vec::new(),
+                edges: Vec::new(),
                 spqr_nodes: Vec::new(),
                 spqr_edges: Vec::new(),
             }
@@ -197,6 +201,35 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
                 adjacent_blocks: blocks.into(),
             }
         })
+    }
+
+    /// Adds an edge into a block.
+    ///
+    /// This can only happen if the block has less than three nodes.
+    ///
+    /// **Note:** This method should ONLY be called for blocks with less than three nodes.
+    /// Blocks with at least three nodes have an SPQR tree, and in this case the edges must be added directly to the SPQR nodes using [`add_edge_to_spqr_node`](Self::add_edge_to_spqr_node).
+    pub fn add_edge_to_block(
+        &mut self,
+        edge: Graph::EdgeIndex,
+        block: BlockIndex<Graph::IndexType>,
+    ) -> Result<(), AddEdgeError> {
+        if self.edge_data[edge].block_index.is_some() {
+            assert_eq!(self.edge_data[edge].block_index, Some(block).into());
+            return Err(AddEdgeError::AlreadyAdded);
+        }
+
+        let (a, b) = self.graph.edge_endpoints(edge);
+        assert!(self.node_data[a].block_indices.contains(&block));
+        assert!(self.node_data[b].block_indices.contains(&block));
+
+        self.edge_data[edge].block_index = block.into();
+        self.blocks[block].edges.push(edge);
+
+        assert!(self.blocks[block].spqr_nodes.is_empty());
+        assert!(self.blocks[block].spqr_edges.is_empty());
+
+        Ok(())
     }
 
     /// Adds an SPQR node into a block.
@@ -236,6 +269,8 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
     /// Adds an edge into an SPQR node.
     ///
     /// These edges are Q-nodes in some interpretations of the SPQR tree.
+    ///
+    /// **Note:** Calling this method does NOT require calling [`add_edge_to_block`](Self::add_edge_to_block) first.
     pub fn add_edge_to_spqr_node(
         &mut self,
         edge: Graph::EdgeIndex,
@@ -252,6 +287,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
 
         self.edge_data[edge].spqr_node_index = spqr_node.into();
         self.spqr_nodes[spqr_node].edges.push(edge);
+
         Ok(())
     }
 
@@ -394,6 +430,17 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
                 });
             }
         }
+
+        assert!(
+            self.components
+                .iter_values()
+                .all(|component| { component.nodes.len() == 1 || !component.blocks.is_empty() })
+        );
+        assert!(
+            self.blocks
+                .iter_values()
+                .all(|block| { block.nodes.len() == 2 || !block.spqr_nodes.is_empty() })
+        );
 
         debug!("SPQR decomposition finalized.");
         SPQRDecomposition {
