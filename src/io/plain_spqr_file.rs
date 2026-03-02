@@ -292,7 +292,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     pub fn write_plain_spqr(&self, mut writer: impl Write) -> std::io::Result<()> {
         writeln!(
             writer,
-            "H v0.1 https://github.com/sebschmi/SPQR-tree-file-format"
+            "H v0.3 https://github.com/sebschmi/SPQR-tree-file-format"
         )?;
 
         // Write node extra data.
@@ -337,6 +337,18 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                 }
                 writeln!(writer)?;
 
+                // Write contained edges.
+                for edge_index in block.iter_edges() {
+                    let (u, v) = self.graph().edge_endpoints(edge_index);
+                    let node_name_u = self.graph().node_name(u);
+                    let node_name_v = self.graph().node_name(v);
+                    let edge_name = format!("E{edge_index}");
+                    writeln!(
+                        writer,
+                        "E {edge_name} B{block_index} {node_name_u} {node_name_v}",
+                    )?;
+                }
+
                 // Write contained SPQR nodes.
                 for (spqr_node_index, spqr_node) in self.iter_spqr_nodes_in_block(block_index) {
                     let spqr_node_name = match spqr_node.spqr_node_type() {
@@ -365,7 +377,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
 
                         write!(
                             writer,
-                            "E {edge_name} {spqr_node_name} B{block_index} {node_name_u} {node_name_v}",
+                            "E {edge_name} {spqr_node_name} {node_name_u} {node_name_v}",
                         )?;
 
                         let extra_data = self.edge_extra_data(edge_index);

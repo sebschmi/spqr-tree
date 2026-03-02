@@ -327,6 +327,10 @@ impl<NodeIndex: Copy, EdgeIndex: Copy, IndexType: Copy> Block<NodeIndex, EdgeInd
     pub fn iter_cut_nodes(&self) -> impl Iterator<Item = CutNodeIndex<IndexType>> {
         self.cut_nodes.iter().copied()
     }
+
+    pub fn iter_edges(&self) -> impl Iterator<Item = EdgeIndex> {
+        self.edges.iter().copied()
+    }
 }
 
 impl<NodeIndex: Copy, IndexType: Copy> CutNode<NodeIndex, IndexType> {
