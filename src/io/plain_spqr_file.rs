@@ -1,6 +1,9 @@
 //! Methods for reading and writing an SPQR decomposition in the [`.spqr` file format](https://github.com/sebschmi/SPQR-tree-file-format).
 
-use std::io::{BufRead, Write};
+use std::{
+    io::{BufRead, Write},
+    iter,
+};
 
 use log::{debug, trace};
 use rustc_hash::FxHashMap;
@@ -250,17 +253,21 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                         .get(block_name)
                         .ok_or_else(|| ReadError::UnknownBlockName(block_name.to_string()))?;
 
-                    let mut has_edges_between = false;
-                    for edge_index in graph.edges_between(node_index_u, node_index_v) {
-                        has_edges_between = true;
-                        builder.add_edge_to_spqr_node(edge_index, spqr_node_index);
-                    }
-
-                    if !has_edges_between {
+                    let mut edges_between = graph.edges_between(node_index_u, node_index_v);
+                    let Some(first) = edges_between.next() else {
                         return Err(ReadError::NoEdgeBetweenNodes(
                             node_name_u.to_string(),
                             node_name_v.to_string(),
                         ));
+                    };
+                    let second = edges_between.next();
+                    let is_multiedge = second.is_some();
+
+                    for edge_index in iter::once(first).chain(second).chain(edges_between) {
+                        let result = builder.add_edge_to_spqr_node(edge_index, spqr_node_index);
+                        if !is_multiedge {
+                            result?;
+                        }
                     }
                 }
                 other => {

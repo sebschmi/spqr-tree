@@ -3,6 +3,7 @@ use std::iter;
 use log::{debug, trace};
 use smallvec::SmallVec;
 use tagged_vec::TaggedVec;
+use thiserror::Error;
 
 use crate::{
     decomposition::{
@@ -31,6 +32,12 @@ pub struct SPQRDecompositionBuilder<'graph, Graph: StaticGraph> {
         TaggedVec<SPQREdgeIndex<Graph::IndexType>, SPQREdge<Graph::NodeIndex, Graph::IndexType>>,
     node_data: TaggedVec<Graph::NodeIndex, SPQRDecompositionNodeDataBuilder<Graph>>,
     edge_data: TaggedVec<Graph::EdgeIndex, SPQRDecompositionEdgeDataBuilder<Graph>>,
+}
+
+#[derive(Error, Debug)]
+pub enum AddEdgeError {
+    #[error("the edge was already added to an SPQR node")]
+    AlreadyAdded,
 }
 
 struct SPQRDecompositionNodeDataBuilder<Graph: StaticGraph> {
@@ -233,8 +240,11 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
         &mut self,
         edge: Graph::EdgeIndex,
         spqr_node: SPQRNodeIndex<Graph::IndexType>,
-    ) {
-        assert!(self.edge_data[edge].spqr_node_index.is_none());
+    ) -> Result<(), AddEdgeError> {
+        if self.edge_data[edge].spqr_node_index.is_some() {
+            assert_eq!(self.edge_data[edge].spqr_node_index, Some(spqr_node).into());
+            return Err(AddEdgeError::AlreadyAdded);
+        }
 
         let (a, b) = self.graph.edge_endpoints(edge);
         assert!(self.node_data[a].spqr_node_indices.contains(&spqr_node));
@@ -242,6 +252,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
 
         self.edge_data[edge].spqr_node_index = spqr_node.into();
         self.spqr_nodes[spqr_node].edges.push(edge);
+        Ok(())
     }
 
     /// Adds an edge to the SPQR tree.

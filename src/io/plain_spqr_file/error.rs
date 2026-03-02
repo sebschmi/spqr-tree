@@ -1,4 +1,6 @@
-use crate::io::plain_spqr_file::line_reader::LineReaderError;
+use crate::{
+    decomposition::builder::AddEdgeError, io::plain_spqr_file::line_reader::LineReaderError,
+};
 
 #[derive(thiserror::Error, Debug)]
 pub enum ReadError {
@@ -7,6 +9,9 @@ pub enum ReadError {
 
     #[error("Line reader error: {0}")]
     Line(#[from] LineReaderError),
+
+    #[error("Add edge error: {0}")]
+    AddEdge(#[from] AddEdgeError),
 
     #[error("invalid line type: {0}. Expected one of G, N, B, C, S, P, R, V, E")]
     InvalidLineType(String),
