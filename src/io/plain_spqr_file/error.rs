@@ -91,7 +91,4 @@ pub enum ReadError {
 
     #[error("an E-line is declared between {0} and {1}, but no such edge exists in the graph")]
     NoEdgeBetweenNodes(String, String),
-
-    #[error("the graph has a multiedge between {0} and {1}")]
-    MultipleEdgesBetweenNodes(String, String),
 }

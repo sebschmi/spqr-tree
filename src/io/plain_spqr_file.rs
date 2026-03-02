@@ -242,20 +242,6 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                         .copied()
                         .ok_or_else(|| ReadError::UnknownNodeName(node_name_v.to_string()))?;
 
-                    let mut edges_between = graph.edges_between(node_index_u, node_index_v);
-                    let edge_index = edges_between.next().ok_or_else(|| {
-                        ReadError::NoEdgeBetweenNodes(
-                            node_name_u.to_string(),
-                            node_name_v.to_string(),
-                        )
-                    })?;
-                    if edges_between.next().is_some() {
-                        return Err(ReadError::MultipleEdgesBetweenNodes(
-                            node_name_u.to_string(),
-                            node_name_v.to_string(),
-                        ));
-                    }
-
                     let spqr_node_index =
                         *name_to_spqr_node_index.get(spqr_node_name).ok_or_else(|| {
                             ReadError::UnknownSPQRNodeName(spqr_node_name.to_string())
@@ -264,7 +250,18 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                         .get(block_name)
                         .ok_or_else(|| ReadError::UnknownBlockName(block_name.to_string()))?;
 
-                    builder.add_edge_to_spqr_node(edge_index, spqr_node_index);
+                    let mut has_edges_between = false;
+                    for edge_index in graph.edges_between(node_index_u, node_index_v) {
+                        has_edges_between = true;
+                        builder.add_edge_to_spqr_node(edge_index, spqr_node_index);
+                    }
+
+                    if !has_edges_between {
+                        return Err(ReadError::NoEdgeBetweenNodes(
+                            node_name_u.to_string(),
+                            node_name_v.to_string(),
+                        ));
+                    }
                 }
                 other => {
                     return Err(ReadError::InvalidLineType(other.to_string()));
