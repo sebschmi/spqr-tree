@@ -114,6 +114,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                     }
 
                     let block_index = builder.add_block(component_index, nodes);
+                    trace!("Block {block_name} has index {block_index}");
                     name_to_block_index.insert(block_name.to_string(), block_index);
                 }
                 "C" => {
@@ -227,8 +228,12 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                     name_to_spqr_edge_index.insert(spqr_edge_name.to_string(), spqr_edge_index);
                 }
                 "E" => {
-                    trace!("Parsing E-line");
-                    let _edge_name = line.column(1).ok_or(ReadError::MissingEdgeNameInELine)?;
+                    trace!(
+                        "Parsing E-line with name {}",
+                        line.column(1).unwrap_or("<missing>")
+                    );
+
+                    let edge_name = line.column(1).ok_or(ReadError::MissingEdgeNameInELine)?;
                     let spqr_node_or_block_or_component_name = line
                         .column(2)
                         .ok_or(ReadError::MissingSPQRNodeOrBlockOrComponentNameInELine)?;
@@ -243,6 +248,13 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                         .get(node_name_v)
                         .copied()
                         .ok_or_else(|| ReadError::UnknownNodeName(node_name_v.to_string()))?;
+
+                    trace!(
+                        "Edge {edge_name} has indices {:?}",
+                        graph
+                            .edges_between(node_index_u, node_index_v)
+                            .collect::<Vec<_>>(),
+                    );
 
                     let mut edges_between = graph.edges_between(node_index_u, node_index_v);
                     let Some(first) = edges_between.next() else {

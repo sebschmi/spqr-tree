@@ -54,7 +54,11 @@ impl<IndexType: GraphIndexInteger, NodeData: NamedNodeData, EdgeData> StaticGrap
     ) -> impl Iterator<Item = Self::EdgeIndex> {
         self.iter_incident_edges(u).filter(move |edge| {
             let endpoints = self.edge_endpoints(*edge);
-            endpoints.0 == v || endpoints.1 == v
+            if u == v {
+                endpoints.0 == v && endpoints.1 == v
+            } else {
+                endpoints.0 == v || endpoints.1 == v
+            }
         })
     }
 }
@@ -62,5 +66,87 @@ impl<IndexType: GraphIndexInteger, NodeData: NamedNodeData, EdgeData> StaticGrap
 impl<T: GfaNodeData> NamedNodeData for T {
     fn name(&'_ self) -> std::borrow::Cow<'_, str> {
         GfaNodeData::name(self)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use bidirected_adjacency_array::graph::{BidirectedAdjacencyArray, BidirectedEdge};
+    use itertools::Itertools;
+    use tagged_vec::TaggedVec;
+
+    use crate::graph::{NamedNodeData, StaticGraph};
+
+    #[test]
+    fn test_edges_between() {
+        struct NodeData(u8);
+        impl NamedNodeData for NodeData {
+            fn name(&'_ self) -> std::borrow::Cow<'_, str> {
+                std::borrow::Cow::Owned(format!("n{}", self.0))
+            }
+        }
+
+        let nodes = [1, 2, 3].into_iter().map(NodeData).collect();
+        let edges = TaggedVec::from(vec![
+            BidirectedEdge::new(3.into(), 0.into(), 1),
+            BidirectedEdge::new(0.into(), 1.into(), 2),
+            BidirectedEdge::new(4.into(), 4.into(), 3),
+            BidirectedEdge::new(0.into(), 4.into(), 4),
+            BidirectedEdge::new(0.into(), 3.into(), 5),
+        ]);
+
+        let graph = BidirectedAdjacencyArray::<u8, NodeData, u8>::new(nodes, edges);
+
+        for n1 in graph.node_indices() {
+            for n2 in graph.node_indices() {
+                let edges_between = graph.edges_between(n1, n2).sorted().collect::<Vec<_>>();
+                let edges_between_reversed =
+                    graph.edges_between(n2, n1).sorted().collect::<Vec<_>>();
+                assert_eq!(edges_between, edges_between_reversed);
+            }
+        }
+
+        assert_eq!(
+            graph
+                .edges_between(0.into(), 0.into())
+                .sorted()
+                .collect::<Vec<_>>(),
+            vec![1.into()]
+        );
+        assert_eq!(
+            graph
+                .edges_between(0.into(), 1.into())
+                .sorted()
+                .collect::<Vec<_>>(),
+            vec![0.into(), 4.into()]
+        );
+        assert_eq!(
+            graph
+                .edges_between(0.into(), 2.into())
+                .sorted()
+                .collect::<Vec<_>>(),
+            vec![3.into()]
+        );
+        assert_eq!(
+            graph
+                .edges_between(1.into(), 1.into())
+                .sorted()
+                .collect::<Vec<_>>(),
+            vec![]
+        );
+        assert_eq!(
+            graph
+                .edges_between(1.into(), 2.into())
+                .sorted()
+                .collect::<Vec<_>>(),
+            vec![]
+        );
+        assert_eq!(
+            graph
+                .edges_between(2.into(), 2.into())
+                .sorted()
+                .collect::<Vec<_>>(),
+            vec![2.into()]
+        );
     }
 }

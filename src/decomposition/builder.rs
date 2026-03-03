@@ -187,21 +187,16 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
 
                         if self.node_data[a].block_indices.contains(&index)
                             && self.node_data[b].block_indices.contains(&index)
-                        {
-                            if self.edge_data[edge].block_index.is_none() {
-                                // Both endpoints are in the block, so the edge must be in the block.
-                                self.edge_data[edge].block_index = index.into();
-                            } else {
-                                assert_eq!(
-                                    self.edge_data[edge].block_index,
-                                    index.into(),
-                                    "Edge {edge} is assigned to block {}, but both endpoints {} and {} are in block {}",
-                                    self.edge_data[edge].block_index.unwrap(),
-                                    a,
-                                    b,
-                                    index,
-                                );
-                            }
+                            && self.edge_data[edge].block_index.is_some() {
+                            assert_eq!(
+                                self.edge_data[edge].block_index,
+                                index.into(),
+                                "Edge {edge} is assigned to block {}, but both endpoints {} and {} are in block {}",
+                                self.edge_data[edge].block_index.unwrap(),
+                                a,
+                                b,
+                                index,
+                            );
                         }
                     }
                 }
@@ -267,7 +262,10 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
 
         let (a, b) = self.graph.edge_endpoints(edge);
         assert!(self.node_data[a].block_indices.contains(&block));
-        assert!(self.node_data[b].block_indices.contains(&block));
+        assert!(
+            self.node_data[b].block_indices.contains(&block),
+            "Edge {edge} has endpoints {a} and {b}, but only {a} is in block {block} while {b} is not.",
+        );
 
         self.edge_data[edge].component_index = self.blocks[block].component.into();
         self.edge_data[edge].block_index = block.into();

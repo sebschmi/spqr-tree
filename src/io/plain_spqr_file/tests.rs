@@ -11,8 +11,18 @@ use regex::Regex;
 
 use crate::decomposition::SPQRDecomposition;
 
+fn enable_logging() {
+    let _ignore = simplelog::TermLogger::init(
+        log::LevelFilter::Trace,
+        Default::default(),
+        simplelog::TerminalMode::Stdout,
+        simplelog::ColorChoice::Auto,
+    );
+}
+
 #[test]
 fn test_tiny1() {
+    enable_logging();
     let remove_edge_labels = Regex::new(r" E\d+ ").unwrap();
 
     let graph = BidirectedAdjacencyArray::<u8, PlainGfaNodeData, PlainGfaEdgeData>::read_gfa1(
@@ -51,6 +61,7 @@ fn test_tiny1() {
 
 #[test]
 fn test_random1_1_false_0() {
+    enable_logging();
     let remove_edge_labels = Regex::new(r" E\d+ ").unwrap();
 
     let graph = BidirectedAdjacencyArray::<u8, PlainGfaNodeData, PlainGfaEdgeData>::read_gfa1(
@@ -89,6 +100,7 @@ fn test_random1_1_false_0() {
 
 #[test]
 fn test_multiedge() {
+    enable_logging();
     let remove_edge_labels = Regex::new(r" E\d+ ").unwrap();
 
     let graph = BidirectedAdjacencyArray::<u8, PlainGfaNodeData, PlainGfaEdgeData>::read_gfa1(
@@ -127,6 +139,7 @@ fn test_multiedge() {
 
 #[test]
 fn test_random3_5_false_0() {
+    enable_logging();
     let remove_edge_labels = Regex::new(r" E\d+ ").unwrap();
 
     let graph = BidirectedAdjacencyArray::<u8, PlainGfaNodeData, PlainGfaEdgeData>::read_gfa1(
@@ -165,6 +178,7 @@ fn test_random3_5_false_0() {
 
 #[test]
 fn test_random5_10_false_0() {
+    enable_logging();
     let remove_edge_labels = Regex::new(r" E\d+ ").unwrap();
 
     let graph = BidirectedAdjacencyArray::<u8, PlainGfaNodeData, PlainGfaEdgeData>::read_gfa1(
