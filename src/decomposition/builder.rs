@@ -414,14 +414,14 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
                 ..
             } = &self.node_data[node_index];
 
-            debug_assert!(component_index.is_some());
+            assert!(component_index.is_some());
             // Components containing only one node cannot contain blocks.
-            debug_assert!(
+            assert!(
                 !block_indices.is_empty()
                     || self.components[component_index.unwrap()].nodes.len() == 1
             );
             // Blocks containing at most two nodes cannot contain SPQR nodes.
-            debug_assert!(
+            assert!(
                 !spqr_node_indices.is_empty()
                     || block_indices
                         .iter()
@@ -438,13 +438,13 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
                 ..
             } = &self.edge_data[edge_index];
 
-            debug_assert!(component_index.is_some());
+            assert!(component_index.is_some());
             // Components containing only one node cannot contain blocks.
-            debug_assert!(
+            assert!(
                 block_index.is_some() || self.components[component_index.unwrap()].nodes.len() == 1
             );
             // Blocks containing at most two nodes cannot contain SPQR nodes.
-            debug_assert!(
+            assert!(
                 spqr_node_index.is_some()
                     || block_index
                         .into_iter()
