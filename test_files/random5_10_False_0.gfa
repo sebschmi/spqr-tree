@@ -1,0 +1,16 @@
+H	VN:Z:1.0
+S	1	CCACATTC
+S	2	CAAAA
+S	3	GACCCAACC
+S	4	AGTACCCTT
+S	5	GAGAGCC
+L	1	+	1	+	0M
+L	1	+	2	-	0M
+L	3	+	4	+	0M
+L	4	+	4	+	0M
+L	4	-	4	+	0M
+L	3	-	5	+	0M
+L	2	-	4	-	0M
+L	2	-	5	-	0M
+L	3	-	4	-	0M
+L	4	+	4	-	0M

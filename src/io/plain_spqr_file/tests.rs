@@ -124,3 +124,79 @@ fn test_multiedge() {
 
     assert_eq!(spqr_decomposition_file_sorted, buffer_sorted);
 }
+
+#[test]
+fn test_random3_5_false_0() {
+    let remove_edge_labels = Regex::new(r" E\d+ ").unwrap();
+
+    let graph = BidirectedAdjacencyArray::<u8, PlainGfaNodeData, PlainGfaEdgeData>::read_gfa1(
+        BufReader::new(File::open("test_files/random3_5_False_0.gfa").unwrap()),
+    )
+    .unwrap();
+    let spqr_decomposition_file = fs::read_to_string("test_files/random3_5_False_0.spqr").unwrap();
+    let spqr_decomposition =
+        SPQRDecomposition::read_plain_spqr(&graph, &mut spqr_decomposition_file.as_bytes())
+            .unwrap();
+
+    let mut buffer = Vec::new();
+    spqr_decomposition.write_plain_spqr(&mut buffer).unwrap();
+
+    let spqr_decomposition_file = remove_edge_labels.replace_all(&spqr_decomposition_file, " E ");
+    let mut spqr_decomposition_file_sorted = spqr_decomposition_file
+        .trim()
+        .lines()
+        .map(|line| line.trim())
+        .collect::<Vec<_>>();
+    spqr_decomposition_file_sorted.sort_unstable();
+    let spqr_decomposition_file_sorted = spqr_decomposition_file_sorted;
+
+    let buffer = std::str::from_utf8(&buffer).unwrap();
+    let buffer = remove_edge_labels.replace_all(buffer, " E ");
+    let mut buffer_sorted = buffer
+        .trim()
+        .lines()
+        .map(|line| line.trim())
+        .collect::<Vec<_>>();
+    buffer_sorted.sort_unstable();
+    let buffer_sorted = buffer_sorted;
+
+    assert_eq!(spqr_decomposition_file_sorted, buffer_sorted);
+}
+
+#[test]
+fn test_random5_10_false_0() {
+    let remove_edge_labels = Regex::new(r" E\d+ ").unwrap();
+
+    let graph = BidirectedAdjacencyArray::<u8, PlainGfaNodeData, PlainGfaEdgeData>::read_gfa1(
+        BufReader::new(File::open("test_files/random5_10_False_0.gfa").unwrap()),
+    )
+    .unwrap();
+    let spqr_decomposition_file = fs::read_to_string("test_files/random5_10_False_0.spqr").unwrap();
+    let spqr_decomposition =
+        SPQRDecomposition::read_plain_spqr(&graph, &mut spqr_decomposition_file.as_bytes())
+            .unwrap();
+
+    let mut buffer = Vec::new();
+    spqr_decomposition.write_plain_spqr(&mut buffer).unwrap();
+
+    let spqr_decomposition_file = remove_edge_labels.replace_all(&spqr_decomposition_file, " E ");
+    let mut spqr_decomposition_file_sorted = spqr_decomposition_file
+        .trim()
+        .lines()
+        .map(|line| line.trim())
+        .collect::<Vec<_>>();
+    spqr_decomposition_file_sorted.sort_unstable();
+    let spqr_decomposition_file_sorted = spqr_decomposition_file_sorted;
+
+    let buffer = std::str::from_utf8(&buffer).unwrap();
+    let buffer = remove_edge_labels.replace_all(buffer, " E ");
+    let mut buffer_sorted = buffer
+        .trim()
+        .lines()
+        .map(|line| line.trim())
+        .collect::<Vec<_>>();
+    buffer_sorted.sort_unstable();
+    let buffer_sorted = buffer_sorted;
+
+    assert_eq!(spqr_decomposition_file_sorted, buffer_sorted);
+}
