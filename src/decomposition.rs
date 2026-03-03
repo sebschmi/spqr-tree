@@ -26,8 +26,10 @@ pub mod indices;
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SPQRDecomposition<'graph, Graph: StaticGraph> {
     pub(crate) graph: &'graph Graph,
-    pub(crate) components:
-        TaggedVec<ComponentIndex<Graph::IndexType>, Component<Graph::NodeIndex, Graph::IndexType>>,
+    pub(crate) components: TaggedVec<
+        ComponentIndex<Graph::IndexType>,
+        Component<Graph::NodeIndex, Graph::EdgeIndex, Graph::IndexType>,
+    >,
     pub(crate) blocks: TaggedVec<
         BlockIndex<Graph::IndexType>,
         Block<Graph::NodeIndex, Graph::EdgeIndex, Graph::IndexType>,
@@ -45,8 +47,10 @@ pub struct SPQRDecomposition<'graph, Graph: StaticGraph> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Component<NodeIndex, IndexType> {
+pub struct Component<NodeIndex, EdgeIndex, IndexType> {
     pub(crate) nodes: Vec<NodeIndex>,
+    /// Only populated if the components has exactly one node.
+    pub(crate) edges: Vec<EdgeIndex>,
     /// Only populated if the component has at least two nodes.
     pub(crate) blocks: Vec<BlockIndex<IndexType>>,
     /// Only populated if the component has at least two nodes.
@@ -139,7 +143,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     ) -> impl Iterator<
         Item = (
             ComponentIndex<Graph::IndexType>,
-            &Component<Graph::NodeIndex, Graph::IndexType>,
+            &Component<Graph::NodeIndex, Graph::EdgeIndex, Graph::IndexType>,
         ),
     > {
         self.components.iter(..)
@@ -290,9 +294,13 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     }
 }
 
-impl<NodeIndex: Copy, IndexType: Copy> Component<NodeIndex, IndexType> {
+impl<NodeIndex: Copy, EdgeIndex: Copy, IndexType: Copy> Component<NodeIndex, EdgeIndex, IndexType> {
     pub fn node_count(&self) -> usize {
         self.nodes.len()
+    }
+
+    pub fn edge_count(&self) -> usize {
+        self.edges.len()
     }
 
     pub fn block_count(&self) -> usize {
@@ -301,6 +309,10 @@ impl<NodeIndex: Copy, IndexType: Copy> Component<NodeIndex, IndexType> {
 
     pub fn iter_nodes(&self) -> impl Iterator<Item = NodeIndex> {
         self.nodes.iter().copied()
+    }
+
+    pub fn iter_edges(&self) -> impl Iterator<Item = EdgeIndex> {
+        self.edges.iter().copied()
     }
 
     pub fn iter_cut_nodes(&self) -> impl Iterator<Item = CutNodeIndex<IndexType>> {

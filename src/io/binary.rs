@@ -104,11 +104,12 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     }
 }
 
-impl<NodeIndex: Copy, IndexType: Copy> Component<NodeIndex, IndexType> {
+impl<NodeIndex: Copy, EdgeIndex: Copy, IndexType: Copy> Component<NodeIndex, EdgeIndex, IndexType> {
     /// Reads from a platform-dependent binary format.
     pub fn read_binary(mut reader: impl Read) -> std::io::Result<Self> {
         Ok(Self {
             nodes: read_vec_binary(&mut reader)?,
+            edges: read_vec_binary(&mut reader)?,
             blocks: read_vec_binary(&mut reader)?,
             cut_nodes: read_vec_binary(&mut reader)?,
         })
@@ -117,6 +118,7 @@ impl<NodeIndex: Copy, IndexType: Copy> Component<NodeIndex, IndexType> {
     /// Writes into a platform-dependent binary format.
     pub fn write_binary(&self, mut writer: impl std::io::Write) -> std::io::Result<()> {
         write_slice_binary(&self.nodes, &mut writer)?;
+        write_slice_binary(&self.edges, &mut writer)?;
         write_slice_binary(&self.blocks, &mut writer)?;
         write_slice_binary(&self.cut_nodes, &mut writer)?;
         Ok(())

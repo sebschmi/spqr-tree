@@ -19,7 +19,7 @@ pub enum ReadError {
     #[error("the file does not start with a header line")]
     MissingHeader,
 
-    #[error("the file fromat version is unsupported. Supported is version v0.1")]
+    #[error("the file fromat version is unsupported. Supported is version v0.4")]
     UnsupportedVersion,
 
     #[error("the header does not contain a URL pointing to the specification")]
@@ -85,14 +85,14 @@ pub enum ReadError {
     #[error("an E-line is missing the edge name")]
     MissingEdgeNameInELine,
 
-    #[error("an E-line is missing the SPQR node or block name")]
-    MissingSPQRNodeOrBlockNameInELine,
+    #[error("an E-line is missing the SPQR node or block or component name")]
+    MissingSPQRNodeOrBlockOrComponentNameInELine,
 
     #[error("an E-line is missing a node name")]
     MissingNodeNameInELine,
 
-    #[error("unknown SPQR node or block name: {0}")]
-    UnknownSPQRNodeOrBlockName(String),
+    #[error("unknown SPQR node or block or component name: {0}")]
+    UnknownSPQRNodeOrBlockOrComponentName(String),
 
     #[error("an E-line is declared between {0} and {1}, but no such edge exists in the graph")]
     NoEdgeBetweenNodes(String, String),

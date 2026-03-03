@@ -1,4 +1,4 @@
-H v0.3 https://github.com/sebschmi/SPQR-tree-file-format
+H v0.4 https://github.com/sebschmi/SPQR-tree-file-format
 G G0 1 2 3
 B B0 G0 2 1 3
 P P0 B0 2 1

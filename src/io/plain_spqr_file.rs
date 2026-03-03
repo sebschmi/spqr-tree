@@ -31,7 +31,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
         if &header[0] != "H" {
             return Err(ReadError::MissingHeader);
         }
-        if header.column(1) != Some("v0.3") {
+        if header.column(1) != Some("v0.4") {
             return Err(ReadError::UnsupportedVersion);
         }
         if header.column(2).is_none() {
@@ -229,9 +229,9 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                 "E" => {
                     trace!("Parsing E-line");
                     let _edge_name = line.column(1).ok_or(ReadError::MissingEdgeNameInELine)?;
-                    let spqr_node_or_block_name = line
+                    let spqr_node_or_block_or_component_name = line
                         .column(2)
-                        .ok_or(ReadError::MissingSPQRNodeOrBlockNameInELine)?;
+                        .ok_or(ReadError::MissingSPQRNodeOrBlockOrComponentNameInELine)?;
                     let node_name_u = line.column(3).ok_or(ReadError::MissingNodeNameInELine)?;
                     let node_name_v = line.column(4).ok_or(ReadError::MissingNodeNameInELine)?;
 
@@ -255,7 +255,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                     let is_multiedge = second.is_some();
 
                     if let Some(spqr_node_index) = name_to_spqr_node_index
-                        .get(spqr_node_or_block_name)
+                        .get(spqr_node_or_block_or_component_name)
                         .copied()
                     {
                         for edge_index in iter::once(first).chain(second).chain(edges_between) {
@@ -264,8 +264,9 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                                 result?;
                             }
                         }
-                    } else if let Some(block_index) =
-                        name_to_block_index.get(spqr_node_or_block_name).copied()
+                    } else if let Some(block_index) = name_to_block_index
+                        .get(spqr_node_or_block_or_component_name)
+                        .copied()
                     {
                         for edge_index in iter::once(first).chain(second).chain(edges_between) {
                             let result = builder.add_edge_to_block(edge_index, block_index);
@@ -273,9 +274,19 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
                                 result?;
                             }
                         }
+                    } else if let Some(component_index) = name_to_component_index
+                        .get(spqr_node_or_block_or_component_name)
+                        .copied()
+                    {
+                        for edge_index in iter::once(first).chain(second).chain(edges_between) {
+                            let result = builder.add_edge_to_component(edge_index, component_index);
+                            if !is_multiedge {
+                                result?;
+                            }
+                        }
                     } else {
-                        return Err(ReadError::UnknownSPQRNodeOrBlockName(
-                            spqr_node_or_block_name.to_string(),
+                        return Err(ReadError::UnknownSPQRNodeOrBlockOrComponentName(
+                            spqr_node_or_block_or_component_name.to_string(),
                         ));
                     }
                 }
@@ -292,7 +303,7 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
     pub fn write_plain_spqr(&self, mut writer: impl Write) -> std::io::Result<()> {
         writeln!(
             writer,
-            "H v0.3 https://github.com/sebschmi/SPQR-tree-file-format"
+            "H v0.4 https://github.com/sebschmi/SPQR-tree-file-format"
         )?;
 
         // Write node extra data.
@@ -314,6 +325,18 @@ impl<'graph, Graph: StaticGraph> SPQRDecomposition<'graph, Graph> {
             }
 
             writeln!(writer)?;
+
+            // Write contained edges.
+            for edge_index in component.iter_edges() {
+                let (u, v) = self.graph().edge_endpoints(edge_index);
+                let node_name_u = self.graph().node_name(u);
+                let node_name_v = self.graph().node_name(v);
+                let edge_name = format!("E{edge_index}");
+                writeln!(
+                    writer,
+                    "E {edge_name} G{component_index} {node_name_u} {node_name_v}",
+                )?;
+            }
 
             // Write cut nodes in component.
             for cut_node_index in component.iter_cut_nodes() {
