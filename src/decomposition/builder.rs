@@ -438,7 +438,14 @@ impl<'graph, Graph: StaticGraph> SPQRDecompositionBuilder<'graph, Graph> {
                 ..
             } = &self.edge_data[edge_index];
 
-            assert!(component_index.is_some());
+            assert!(
+                component_index.is_some(),
+                "Edge {edge_index} from {} to {} is not assigned to any component",
+                self.graph
+                    .node_name(self.graph.edge_endpoints(edge_index).0),
+                self.graph
+                    .node_name(self.graph.edge_endpoints(edge_index).1),
+            );
             // Components containing only one node cannot contain blocks.
             assert!(
                 block_index.is_some() || self.components[component_index.unwrap()].nodes.len() == 1
