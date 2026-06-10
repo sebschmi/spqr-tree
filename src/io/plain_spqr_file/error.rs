@@ -13,7 +13,7 @@ pub enum ReadError {
     #[error("Add edge error: {0}")]
     AddEdge(#[from] AddEdgeError),
 
-    #[error("invalid line type: {0}. Expected one of G, N, B, C, S, P, R, V, E")]
+    #[error("invalid line type: {0:?}. Expected one of G, N, B, C, S, P, R, V, E")]
     InvalidLineType(String),
 
     #[error("the file does not start with a header line")]
@@ -34,7 +34,7 @@ pub enum ReadError {
     #[error("an N-line is missing the node name")]
     MissingNodeNameInNLine,
 
-    #[error("unknown node name: {0}")]
+    #[error("unknown node name: {0:?}")]
     UnknownNodeName(String),
 
     #[error("a B-line is missing the block name")]
@@ -43,7 +43,7 @@ pub enum ReadError {
     #[error("a B-line is missing the component name")]
     MissingComponentNameInBLine,
 
-    #[error("unknown component name: {0}")]
+    #[error("unknown component name: {0:?}")]
     UnknownComponentName(String),
 
     #[error("an empty block was declared")]
@@ -52,7 +52,7 @@ pub enum ReadError {
     #[error("a C-line is missing the node name")]
     MissingNodeNameInCLine,
 
-    #[error("unknown block name: {0}")]
+    #[error("unknown block name: {0:?}")]
     UnknownBlockName(String),
 
     #[error("a cut node with no incident blocks was declared")]
@@ -76,10 +76,10 @@ pub enum ReadError {
     #[error("a V-line is missing a node name")]
     MissingNodeNameInVLine,
 
-    #[error("unknown SPQR node name: {0}")]
+    #[error("unknown SPQR node name: {0:?}")]
     UnknownSPQRNodeName(String),
 
-    #[error("a SPQR edge connects SPQR nodes from different blocks: {0}")]
+    #[error("a SPQR edge connects SPQR nodes from different blocks: {0:?}")]
     SPQREdgeBetweenDifferentBlocks(String),
 
     #[error("an E-line is missing the edge name")]
@@ -91,9 +91,9 @@ pub enum ReadError {
     #[error("an E-line is missing a node name")]
     MissingNodeNameInELine,
 
-    #[error("unknown SPQR node or block or component name: {0}")]
+    #[error("unknown SPQR node or block or component name: {0:?}")]
     UnknownSPQRNodeOrBlockOrComponentName(String),
 
-    #[error("an E-line is declared between {0} and {1}, but no such edge exists in the graph")]
+    #[error("an E-line is declared between {0:?} and {1:?}, but no such edge exists in the graph")]
     NoEdgeBetweenNodes(String, String),
 }
