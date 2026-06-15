@@ -365,6 +365,10 @@ impl<NodeIndex: Copy, EdgeIndex: Copy, IndexType: Copy> SPQRNode<NodeIndex, Edge
         self.nodes.len()
     }
 
+    pub fn edge_count(&self) -> usize {
+        self.edges.len()
+    }
+
     pub fn block(&self) -> BlockIndex<IndexType> {
         self.block
     }
