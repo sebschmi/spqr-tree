@@ -407,6 +407,18 @@ impl<NodeIndex: Copy, EdgeIndex: Copy, IndexType: Copy> SPQRNode<NodeIndex, Edge
     pub fn iter_incident_spqr_edges(&self) -> impl Iterator<Item = SPQREdgeIndex<IndexType>> {
         self.spqr_edges.iter().copied()
     }
+
+    pub fn is_s_node(&self) -> bool {
+        self.spqr_node_type == SPQRNodeType::SNode
+    }
+
+    pub fn is_p_node(&self) -> bool {
+        self.spqr_node_type == SPQRNodeType::PNode
+    }
+
+    pub fn is_r_node(&self) -> bool {
+        self.spqr_node_type == SPQRNodeType::RNode
+    }
 }
 
 impl<NodeIndex: GraphIndex, IndexType: GraphIndexInteger> SPQREdge<NodeIndex, IndexType> {
