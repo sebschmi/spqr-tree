@@ -365,8 +365,19 @@ impl<NodeIndex: Copy, EdgeIndex: Copy, IndexType: Copy> SPQRNode<NodeIndex, Edge
         self.nodes.len()
     }
 
-    pub fn edge_count(&self) -> usize {
+    /// The amount of real edges in the SPQR node, also known as Q-nodes.
+    pub fn real_edge_count(&self) -> usize {
         self.edges.len()
+    }
+
+    /// The amount of virtual edges in the SPQR node.
+    pub fn virtual_edge_count(&self) -> usize {
+        self.spqr_edges.len()
+    }
+
+    /// The amount of edges in the skeleton graph of the SPQR node.
+    pub fn skeleton_edge_count(&self) -> usize {
+        self.real_edge_count() + self.virtual_edge_count()
     }
 
     pub fn block(&self) -> BlockIndex<IndexType> {
